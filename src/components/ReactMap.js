@@ -37,18 +37,21 @@ export default function MapContainer(){
         }, {}))
       }).catch(()=>console.log("Error Fetching Data"))
     },[])
-    const geoJSONStyle = (feature) => {return {
-        color: '#FFFFFF',
+    const geoJSONStyle = (feature) => {
+      const spot = hotspotData[feature.properties.NAME]
+      return {
+        color: '#718096',
         weight: 1,
         fillOpacity: 0.5,
-        fillColor: Object.keys(hotspotData).includes(feature.properties.NAME)?'#F28F3B':'#A73829',
+        fillColor: spot ? spot.zone==="orange" ? '#ed8936' : spot.zone==="green" ? '#48bb78' : spot.zone==="red" ? '#e53e3e' :'transparent' :'transparent',
       }}
     const renderTooltip = (feature) => {
       const featureData = hotspotData[feature.properties.NAME]
       return featureData ?  (
-        `${feature.properties.NAME} <br/>`
+        `${feature.properties.NAME} <br/>
+          Zone: ${featureData.zone}`
       ) : `${feature.properties.NAME} <br/>
-            Orange/Green Zone`
+            No Data`
     }
     const onEachFeature = (feature: Object, layer: Object) => {
       const tooltipChildren = renderTooltip(feature);
