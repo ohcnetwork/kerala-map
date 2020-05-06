@@ -1,18 +1,20 @@
-import React from 'react';
-import ReactMap from './components/ReactMap'
-import Navbar from './components/Navbar'
-import {useRoutes} from 'hookrouter';
+import React from "react";
+import ReactMap from "./components/ReactMap";
+import Navbar from "./components/Navbar";
+import { useRoutes } from "hookrouter";
 
 const routes = {
-    '/': () => <ReactMap />,
+  "/": () => <ReactMap />,
 };
 
 function App() {
   const routeResult = useRoutes(routes);
   return (
-    <div className="h-screen w-screen">
-      <Navbar />
-     { routeResult }
+    <div className="relative h-screen w-screen font-inter">
+      <div className="absolute inset-x-0 top-0 z-40">
+        <Navbar />
+      </div>
+      {routeResult}
     </div>
   );
 }
