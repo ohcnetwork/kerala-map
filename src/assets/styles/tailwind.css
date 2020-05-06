@@ -45,10 +45,13 @@ h3 {
 
 @import url("https://fonts.googleapis.com/css?family=Inter:100,200,300,400,500,600,700,800,900&display=swap");
 
-@tailwind utilities;
-
+/*! purgecss start ignore */
+@import url("https://unpkg.com/leaflet@1.6.0/dist/leaflet.css");
 .leaflet-container {
   z-index: 0;
   height: 100%;
   width: 100%;
 }
+/*! purgecss end ignore */
+
+@tailwind utilities;
