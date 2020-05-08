@@ -1,8 +1,14 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import lsgdGeoData from "../assets/data/kerala_lsgd.json";
 import districtGeoData from "../assets/data/kerala_district.json";
-import MapGL, { Source, Layer, Filter } from "@urbica/react-map-gl";
+import MapGL, {
+  Source,
+  Layer,
+  Filter,
+  GeolocateControl,
+} from "@urbica/react-map-gl";
 import Card from "./Card";
+import { Minus, Plus } from "react-feather";
 
 const MAPBOX_ACCESS_TOKEN = process.env.POI_APP_MAPBOX_ACCESS_TOKEN;
 const HEIGHTMULTIPLIER = 2;
@@ -32,13 +38,26 @@ export default function MapBox({
   districtOnly,
 }) {
   const mapRef = useRef(null);
+  const [cardEnabled, setCardEnabled] = useState(true);
   const [clicked, setClicked] = useState(false);
   const [hoveredEntity, setHoveredEntity] = useState(null);
+  const [geolocatedLoc, setGeolocatedLoc] = useState(null);
   const [viewport, setViewport] = useState({
     latitude: (MAXBOUNDS[0][1] + MAXBOUNDS[1][1]) / 2,
     longitude: (MAXBOUNDS[0][0] + MAXBOUNDS[1][0]) / 2,
     zoom: 1,
   });
+
+  useEffect(() => {
+    if (geolocatedLoc == null) {
+      const map = mapRef.current.getMap();
+      map.fitBounds(MAXBOUNDS);
+      let e = document.querySelector(".mapboxgl-user-location-dot");
+      e && e.remove();
+      e = document.querySelector(".mapboxgl-user-location-accuracy-circle");
+      e && e.remove();
+    }
+  }, [geolocatedLoc]);
 
   const onClick = (event) => {
     if (event.features) {
@@ -54,7 +73,7 @@ export default function MapBox({
           setHoveredEntity({
             id: f.id,
             p: f.properties,
-            zone: z,
+            z: z,
           });
         }
         setClicked(true);
@@ -78,7 +97,7 @@ export default function MapBox({
         setHoveredEntity({
           id: f.id,
           p: f.properties,
-          zone: z,
+          z: z,
         });
       }
     }
@@ -88,6 +107,36 @@ export default function MapBox({
     if (hoveredEntity && !clicked) {
       setHoveredEntity(null);
     }
+  };
+
+  const onGeolocate = (data) => {
+    const errorMsg = "Could not locate, please try again.";
+    if (mapRef) {
+      const map = mapRef.current.getMap();
+      const p = data.target._userLocationDotMarker._pos;
+      let _f = map.queryRenderedFeatures([p.x, p.y]);
+      if (!_f) {
+        // alert(errorMsg);
+        return;
+      }
+      const f = _f.find((e) => e.layer.type === "fill-extrusion");
+      if (!f) {
+        // alert(errorMsg);
+        return;
+      }
+      let z =
+        f.properties.LSGD && hotspots.includes(f.properties.LSGD)
+          ? "CONTAINMENT"
+          : zones[f.properties.DISTRICT].toUpperCase();
+      setGeolocatedLoc({
+        p: f.properties,
+        z: z,
+      });
+    }
+  };
+
+  const onError = (error) => {
+    console.log("A geolocate event has occurred.", error);
   };
 
   const zoneHeight = (z) => {
@@ -158,16 +207,48 @@ export default function MapBox({
       </div>
     );
   };
+
   return (
-    <div className="flex flex-col lg:flex-row min-h-full min-w-full relative">
-      <div className="absolute flex flex-grow w-full lg:w-1/6 order-last lg:order-first z-40 pointer-events-none select-none">
-        <Card
-          hotspots={hotspots}
-          zones={zones}
-          stats={stats}
-          hoveredEntity={hoveredEntity}
-          darkMode={darkMode}
-        />
+    <div className="flex flex-col lg:flex-row min-h-full min-w-full">
+      <div className="group absolute flex flex-grow w-full lg:w-1/6 order-last lg:order-first z-40 pointer-events-none select-none p-2">
+        {cardEnabled ? (
+          <Minus
+            className="absolute top-0 left-0 m-4 pointer-events-auto text-white"
+            cursor="pointer"
+            size={"0.5rem"}
+            onClick={() => {
+              setCardEnabled(false);
+            }}
+          />
+        ) : (
+          <Plus
+            className="absolute top-0 left-0 m-4 pointer-events-auto text-white"
+            cursor="pointer"
+            size={"0.5rem"}
+            onClick={() => {
+              setCardEnabled(true);
+            }}
+          />
+        )}
+        <div
+          className={`transition duration-150 ease-in-out transform origin-top-left ${
+            cardEnabled
+              ? geolocatedLoc
+                ? "scale-100"
+                : "scale-100 group-hover:scale-0"
+              : "scale-0"
+          }`}
+        >
+          <Card
+            hotspots={hotspots}
+            zones={zones}
+            stats={stats}
+            hoveredEntity={hoveredEntity}
+            darkMode={darkMode}
+            geolocatedLoc={geolocatedLoc}
+            setGeolocatedLoc={setGeolocatedLoc}
+          />
+        </div>
       </div>
       <div
         className="flex flex-grow w-full lg:w-5/6"
@@ -180,10 +261,18 @@ export default function MapBox({
           onViewportChange={setViewport}
           maxBounds={MAXBOUNDS}
           maxZoom={MAXZOOM}
-          mapRef={mapRef}
           onClick={onClick}
+          viewportChangeMethod="flyTo"
+          viewportChangeOptions={{ duration: 1000 }}
           {...viewport}
+          ref={mapRef}
         >
+          <GeolocateControl
+            positionOptions={{ enableHighAccuracy: true, timeout: 1000 }}
+            position="bottom-right"
+            onGeolocate={onGeolocate}
+            onError={onError}
+          />
           <Source id="district" type="geojson" data={districtGeoData} />
           <Source id="lsgd" type="geojson" data={lsgdGeoData} />
           {!districtOnly ? (

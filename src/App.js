@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import MapBox from "./components/MapBox";
 import { useRoutes } from "hookrouter";
 import axios from "axios";
-import { Info, Moon, Sun, Target, ChevronDown } from "react-feather";
+import { Info, Moon, Sun, Target, ChevronLeft } from "react-feather";
 
 const routes = {
   "/": () => (stats, zones, hotspots, darkMode, districtOnly) => (
@@ -56,10 +56,10 @@ function App() {
     }
   }, [fetched]);
   return fetched ? (
-    <div className="flex relative h-screen w-screen font-inter overflow-y-scroll lg:overflow-hidden">
+    <div className="flex relative h-screen w-screen font-inter overflow-hidden">
       <div className="flex flex-col absolute top-0 right-0 z-40">
         <div className="flex flex-col mb-2 items-center">
-          <a className="flex w-48 m-1 lg:m-2" href="./">
+          <a className="flex w-48 mr-1 lg:mr-2 mt-1 lg:mt-2 mb-0" href="./">
             <img
               className="object-contain"
               src={require("./assets/img/coronaSafeLogo.svg")}
@@ -68,42 +68,47 @@ function App() {
             />
           </a>
           <div
-            className={`group inline-block self-end mr-2 fill-current ${
+            className={`group flex self-end text-mobilexs mr-2 fill-current ${
               darkMode ? "text-white" : "text-black"
             }`}
           >
-            <ChevronDown
-              cursor="pointer"
-              size={20}
-              className="transform group-hover:-rotate-180 transition duration-150 ease-in-out"
+            <div className="flex flex-row transform scale-0 group-hover:scale-100 transition duration-150 ease-in-out origin-right space-x-2">
+              <a href="/">
+                <div className="flex flex-row items-center cursor-pointer">
+                  <Info className="flex mr-1" size={"1rem"} />
+                  Info
+                </div>
+              </a>
+
+              {darkMode ? (
+                <div
+                  className="flex flex-row items-center cursor-pointer"
+                  onClick={() => setDarkMode(!darkMode)}
+                >
+                  <Sun className="flex mr-1" size={"1rem"} />
+                  Light
+                </div>
+              ) : (
+                <div
+                  className="flex flex-row items-center cursor-pointer"
+                  onClick={() => setDarkMode(!darkMode)}
+                >
+                  <Moon className="flex mr-1" size={"1rem"} />
+                  Dark
+                </div>
+              )}
+              <div
+                className="flex flex-row items-center cursor-pointer"
+                onClick={() => setDistrictOnly(!districtOnly)}
+              >
+                <Target className="flex mr-1" size={"1rem"} />
+                {!districtOnly ? "DISTRICT" : "LSGD"}
+              </div>
+            </div>
+            <ChevronLeft
+              size={"1rem"}
+              className="transform group-hover:scale-0 transition duration-150 ease-in-out cursor-pointer relative right-0"
             />
-            <ul className="transform scale-0 group-hover:scale-100 absolute transition duration-150 ease-in-out origin-top space-y-1">
-              <li>
-                <Info cursor="pointer" size={20} href="/" />
-              </li>
-              <li>
-                {darkMode ? (
-                  <Sun
-                    cursor="pointer"
-                    size={20}
-                    onClick={() => setDarkMode(!darkMode)}
-                  />
-                ) : (
-                  <Moon
-                    cursor="pointer"
-                    size={20}
-                    onClick={() => setDarkMode(!darkMode)}
-                  />
-                )}
-              </li>
-              <li>
-                <Target
-                  cursor="pointer"
-                  size={20}
-                  onClick={() => setDistrictOnly(!districtOnly)}
-                />
-              </li>
-            </ul>
           </div>
         </div>
       </div>
