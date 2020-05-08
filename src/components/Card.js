@@ -1,5 +1,4 @@
 import React from "react";
-import { ArrowLeft } from "react-feather";
 
 export default function Card({
   stats,
