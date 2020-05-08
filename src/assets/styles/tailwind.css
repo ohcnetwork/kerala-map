@@ -12,46 +12,56 @@ h3 {
 
 @tailwind components;
 
-.react-date-picker__wrapper {
-  border: none !important;
-}
-
-.lds-dual-ring {
+.lds-ripple {
   display: inline-block;
-  width: 80px;
-  height: 80px;
-}
-
-.lds-dual-ring:after {
-  content: " ";
-  display: block;
+  position: relative;
   width: 64px;
   height: 64px;
-  margin: 8px;
-  border-radius: 50%;
-  border: 6px solid #ccc;
-  border-color: #ccc transparent #ccc transparent;
-  animation: lds-dual-ring 1.2s linear infinite;
 }
-
-@keyframes lds-dual-ring {
+.lds-ripple div {
+  position: absolute;
+  border: 4px solid #cef;
+  opacity: 1;
+  border-radius: 50%;
+  animation: lds-ripple 1s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+}
+.lds-ripple div:nth-child(2) {
+  animation-delay: -0.5s;
+}
+@keyframes lds-ripple {
   0% {
-    transform: rotate(0deg);
+    top: 28px;
+    left: 28px;
+    width: 0;
+    height: 0;
+    opacity: 1;
   }
   100% {
-    transform: rotate(360deg);
+    top: -1px;
+    left: -1px;
+    width: 58px;
+    height: 58px;
+    opacity: 0;
   }
+}
+
+li > ul {
+  transform: translatex(100%) scale(0);
+}
+li:hover > ul {
+  transform: translatex(101%) scale(1);
+}
+li > button svg {
+  transform: rotate(-90deg);
+}
+li:hover > button svg {
+  transform: rotate(-270deg);
 }
 
 @import url("https://fonts.googleapis.com/css?family=Inter:100,200,300,400,500,600,700,800,900&display=swap");
 
 /*! purgecss start ignore */
-@import url("https://unpkg.com/leaflet@1.6.0/dist/leaflet.css");
-.leaflet-container {
-  z-index: 0;
-  height: 100%;
-  width: 100%;
-}
+@import url("https://api.mapbox.com/mapbox-gl-js/v1.10.0/mapbox-gl.css");
 /*! purgecss end ignore */
 
 @tailwind utilities;

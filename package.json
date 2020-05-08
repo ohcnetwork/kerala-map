@@ -3,32 +3,17 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "@testing-library/jest-dom": "^4.2.4",
-    "@testing-library/react": "^9.3.2",
-    "@testing-library/user-event": "^7.1.2",
+    "@urbica/react-map-gl": "^1.13.1",
     "axios": "^0.19.2",
     "hookrouter": "^1.2.3",
-    "leaflet": "^1.6.0",
+    "mapbox-gl": "^1.10.0",
     "react": "^16.13.1",
-    "react-date-picker": "^8.0.1",
     "react-dom": "^16.13.1",
-    "react-leaflet": "^2.6.3",
-    "react-leaflet-control": "^2.1.2",
-    "react-papaparse": "^3.1.0",
-    "react-scripts": "3.4.1",
-    "recharts": "^1.8.5",
-    "tailwindcss": "^1.2.0"
+    "react-feather": "^2.0.8"
   },
   "scripts": {
-    "build:css": "postcss src/assets/styles/tailwind.css -o src/assets/styles/index.css",
-    "watch:css": "postcss src/assets/styles/tailwind.css -o src/assets/styles/index.css -w",
-    "start": "concurrently --kill-others \"npm run watch:css\" \"react-scripts start\"",
-    "build": "NODE_ENV=production npm run build:css && react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
-  },
-  "eslintConfig": {
-    "extends": "react-app"
+    "build": "poi --prod",
+    "dev": "poi --serve"
   },
   "browserslist": {
     "production": [
@@ -44,11 +29,9 @@
   },
   "devDependencies": {
     "autoprefixer": "^9.7.6",
-    "bs-platform": "^7.2.2",
-    "concurrently": "^5.1.0",
-    "postcss-cli": "^7.1.0",
-    "tailwindcss": "^1.2.0",
     "cssnano": "^4.1.10",
-    "@fullhuman/postcss-purgecss": "^2.1.2"
+    "poi": "^12.8.0",
+    "react-hot-loader": "^4.12.21",
+    "tailwindcss": "^1.4.5"
   }
 }
