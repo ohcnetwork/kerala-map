@@ -6,6 +6,8 @@ export default function Card({
   hotspots,
   hoveredEntity,
   darkMode,
+  geolocatedLoc,
+  setGeolocatedLoc,
 }) {
   const lens = {
     CONTAINMENT: hotspots.length,
@@ -20,30 +22,26 @@ export default function Card({
     GREEN: "text-green-600",
   };
 
-  const HoveredInfo = () => {
+  const info = (p, z, f) => {
     return (
       <div className="flex flex-col uppercase mb-2">
         <div className="mb-2">
-          {hoveredEntity.p.LSGD && (
+          {p.LSGD && (
             <div>
               <div className="text-mobilexs lg:text-xs">LSGD</div>
-              <div className="font-semibold">{hoveredEntity.p.LSGD}</div>
+              <div className="font-semibold">{p.LSGD}</div>
             </div>
           )}
           <div>
             <div className="text-mobilexs lg:text-xs">DISTRICT</div>
-            <div className="font-semibold">{hoveredEntity.p.DISTRICT}</div>
+            <div className="font-semibold">{p.DISTRICT}</div>
           </div>
-          <div>
-            <div className="text-mobilexs lg:text-xs">ZONE</div>
-            <div
-              className={`font-semibold ${
-                hoveredEntity ? color[hoveredEntity.zone] : "text-black"
-              }`}
-            >
-              {hoveredEntity.zone}
+          {f && (
+            <div>
+              <div className="text-mobilexs lg:text-xs">ZONE</div>
+              <div className={`font-semibold ${color[z]}`}>{z}</div>
             </div>
-          </div>
+          )}
         </div>
         <div>
           <div className="text-mobilexs lg:text-xs">DISTRICT STATS</div>
@@ -52,7 +50,7 @@ export default function Card({
               <div>
                 <div className="text-mobilexs lg:text-xs">{a}</div>
                 <div className="font-semibold">
-                  {stats.latest[hoveredEntity.p.DISTRICT][a]}
+                  {stats.latest[p.DISTRICT][a]}
                 </div>
               </div>
             ))}
@@ -64,25 +62,47 @@ export default function Card({
 
   return (
     <div
-      className={`flex flex-col w-27 lg:w-full text-mobile lg:text-sm p-2 m-1 lg:m-2 bg-opacity-50 lg:bg-opacity-0 ${
+      className={`flex flex-col w-27 lg:w-48 text-mobile lg:text-sm px-2 pt-4 pb-2 bg-opacity-50 ${
         darkMode ? "text-white bg-black" : "text-black bg-white"
       }`}
     >
-      <div className="flex flex-col uppercase mb-2">
-        {Object.entries(lens).map((a) => (
-          <div>
-            <div className={`text-mobilexs lg:text-xs ${color[a[0]]}`}>{`${
-              a[0] == "CONTAINMENT" ? "LSGD" : "DISTRICTS"
-            } IN ${a[0]}`}</div>
-            <div className="font-semibold">{a[1]}</div>
+      {!geolocatedLoc ? (
+        <div>
+          <div className="flex flex-col uppercase mb-2">
+            {Object.entries(lens).map((a) => (
+              <div>
+                <div className={`text-mobilexs lg:text-xs ${color[a[0]]}`}>{`${
+                  a[0] == "CONTAINMENT" ? "LSGD" : "DISTRICTS"
+                } IN ${a[0]}`}</div>
+                <div className="font-semibold">{a[1]}</div>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      {hoveredEntity ? (
-        <HoveredInfo />
+          {hoveredEntity ? (
+            info(hoveredEntity.p, hoveredEntity.z, true)
+          ) : (
+            <div className="text-mobilexs lg:text-mobile">
+              Hover/select an area for detailed information.
+            </div>
+          )}
+        </div>
       ) : (
-        <div className="text-mobilexs lg:text-mobile mb-2">
-          Hover/select an area for detailed information.
+        <div>
+          <div className="mb-2">
+            <div className="uppercase font-semibold">You are in</div>
+            <div
+              className={`text-base font-semibold ${color[geolocatedLoc.z]}`}
+            >
+              {`${geolocatedLoc.z} ZONE`}
+            </div>
+          </div>
+          {info(geolocatedLoc.p, geolocatedLoc.z, false)}
+          <button
+            className="uppercase text-mobilexs pointer-events-auto"
+            onClick={() => setGeolocatedLoc(null)}
+          >
+            CLICK TO RETURN
+          </button>
         </div>
       )}
     </div>
