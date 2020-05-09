@@ -8,7 +8,6 @@ import MapGL, {
   GeolocateControl,
 } from "@urbica/react-map-gl";
 import Card from "./Card";
-import { Minus, Plus } from "react-feather";
 
 const MAPBOX_ACCESS_TOKEN = process.env.POI_APP_MAPBOX_ACCESS_TOKEN;
 const HEIGHTMULTIPLIER = 2;
@@ -38,7 +37,6 @@ export default function MapBox({
   districtOnly,
 }) {
   const mapRef = useRef(null);
-  const [cardEnabled, setCardEnabled] = useState(true);
   const [clicked, setClicked] = useState(false);
   const [hoveredEntity, setHoveredEntity] = useState(null);
   const [geolocatedLoc, setGeolocatedLoc] = useState(null);
@@ -210,46 +208,15 @@ export default function MapBox({
 
   return (
     <div className="flex flex-col lg:flex-row min-h-full min-w-full">
-      <div className="group absolute flex flex-grow w-full lg:w-1/6 order-last lg:order-first z-40 pointer-events-none select-none p-2">
-        {cardEnabled ? (
-          <Minus
-            className="absolute top-0 left-0 m-4 pointer-events-auto text-white"
-            cursor="pointer"
-            size={"0.5rem"}
-            onClick={() => {
-              setCardEnabled(false);
-            }}
-          />
-        ) : (
-          <Plus
-            className="absolute top-0 left-0 m-4 pointer-events-auto text-white"
-            cursor="pointer"
-            size={"0.5rem"}
-            onClick={() => {
-              setCardEnabled(true);
-            }}
-          />
-        )}
-        <div
-          className={`transition duration-150 ease-in-out transform origin-top-left ${
-            cardEnabled
-              ? geolocatedLoc
-                ? "scale-100"
-                : "scale-100 group-hover:scale-0"
-              : "scale-0"
-          }`}
-        >
-          <Card
-            hotspots={hotspots}
-            zones={zones}
-            stats={stats}
-            hoveredEntity={hoveredEntity}
-            darkMode={darkMode}
-            geolocatedLoc={geolocatedLoc}
-            setGeolocatedLoc={setGeolocatedLoc}
-          />
-        </div>
-      </div>
+      <Card
+        hotspots={hotspots}
+        zones={zones}
+        stats={stats}
+        hoveredEntity={hoveredEntity}
+        darkMode={darkMode}
+        geolocatedLoc={geolocatedLoc}
+        setGeolocatedLoc={setGeolocatedLoc}
+      />
       <div
         className="flex flex-grow w-full lg:w-5/6"
         style={{ minHeight: "90vh" }}
