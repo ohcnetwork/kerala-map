@@ -1,11 +1,21 @@
 import React, { useState, useEffect } from "react";
 import MapBox from "./components/MapBox";
-import { useRoutes } from "hookrouter";
+import { useRoutes, Link } from "raviger";
 import axios from "axios";
-import { Info, Moon, Sun, Target, ChevronLeft } from "react-feather";
+import {
+  Info,
+  Moon,
+  Sun,
+  Target,
+  ChevronDown,
+  Map,
+  Activity,
+} from "react-feather";
+import Zones from "./components/Info";
+import { hot } from "react-hot-loader";
 
 const routes = {
-  "/": () => (stats, zones, hotspots, darkMode, districtOnly) => (
+  "/": ({ darkMode, stats, zones, hotspots, districtOnly }) => (
     <MapBox
       stats={stats}
       zones={zones}
@@ -14,6 +24,7 @@ const routes = {
       districtOnly={districtOnly}
     />
   ),
+  "/info": ({ darkMode }) => <Zones darkMode={darkMode} />,
 };
 
 function App() {
@@ -23,7 +34,10 @@ function App() {
   const [hotspots, setHotspots] = useState([]);
   const [zones, setZones] = useState({});
   const [fetched, setFetched] = useState(false);
-  const routeResult = useRoutes(routes);
+  const route = useRoutes(routes, {
+    routeProps: { darkMode, stats, zones, hotspots, districtOnly },
+  });
+
   useEffect(() => {
     if (!fetched) {
       (async () => {
@@ -55,64 +69,86 @@ function App() {
       })();
     }
   }, [fetched]);
+
   return fetched ? (
-    <div className="flex relative h-screen w-screen font-inter overflow-hidden">
-      <div className="flex flex-col absolute top-0 right-0 z-40">
-        <div className="flex flex-col mb-2 items-center">
-          <a className="flex w-48 mr-1 lg:mr-2 mt-1 lg:mt-2 mb-0" href="./">
+    <div
+      className={`flex relative min-h-screen min-w-screen overflow-x-hidden  font-inter ${
+        darkMode ? "bg-dark-500" : "bg-light-500"
+      }`}
+    >
+      <div
+        className={`flex flex-col fixed top-0 right-0 z-40 m-2 items-end uppercase fill-current ${
+          darkMode ? "text-white" : "text-black"
+        }`}
+      >
+        <div className="leading-none font-extrabold tracking-wider text-xl lg:text-3xl text-right">
+          HOTSPOT MAP
+        </div>
+        <div className="flex text-mobilexs lg:text-mobile content-center">
+          <p>Part of</p>
+          <a
+            className="inline w-12 lg: ml-1"
+            href="https://coronasafe.network/"
+          >
             <img
-              className="object-contain"
               src={require("./assets/img/coronaSafeLogo.svg")}
               title="CoronaSafe: Corona Literacy Mission"
               alt="CoronaSafe Logo: Corona Literacy Mission"
             />
           </a>
-          <div
-            className={`group flex self-end text-mobilexs mr-2 fill-current ${
-              darkMode ? "text-white" : "text-black"
-            }`}
-          >
-            <div className="flex flex-row transform scale-0 group-hover:scale-100 transition duration-150 ease-in-out origin-right space-x-2">
-              <a href="/">
-                <div className="flex flex-row items-center cursor-pointer">
-                  <Info className="flex mr-1" size={"1rem"} />
-                  Info
-                </div>
-              </a>
-
-              {darkMode ? (
-                <div
-                  className="flex flex-row items-center cursor-pointer"
-                  onClick={() => setDarkMode(!darkMode)}
-                >
-                  <Sun className="flex mr-1" size={"1rem"} />
-                  Light
-                </div>
-              ) : (
-                <div
-                  className="flex flex-row items-center cursor-pointer"
-                  onClick={() => setDarkMode(!darkMode)}
-                >
-                  <Moon className="flex mr-1" size={"1rem"} />
-                  Dark
-                </div>
-              )}
+        </div>
+        <div className="group flex text-mobilexs">
+          <div className="flex items-end flex-col lg:w-full transform scale-0 group-hover:scale-100 transition duration-150 ease-in-out origin-right space-y-1 mt-1">
+            <Link href="/">
+              <div className="flex flex-row items-center cursor-pointer">
+                Map
+                <Map className="flex ml-1" size={"0.8rem"} />
+              </div>
+            </Link>
+            <Link href="/info">
+              <div className="flex flex-row items-center cursor-pointer">
+                Info
+                <Info className="flex ml-1" size={"0.8rem"} />
+              </div>
+            </Link>
+            <a href="https://keralamap.coronasafe.network/">
+              <div className="flex flex-row items-center cursor-pointer">
+                Dashboard
+                <Activity className="flex ml-1" size={"0.8rem"} />
+              </div>
+            </a>
+            {darkMode ? (
               <div
                 className="flex flex-row items-center cursor-pointer"
-                onClick={() => setDistrictOnly(!districtOnly)}
+                onClick={() => setDarkMode(!darkMode)}
               >
-                <Target className="flex mr-1" size={"1rem"} />
-                {!districtOnly ? "DISTRICT" : "LSGD"}
+                Light
+                <Sun className="flex ml-1" size={"0.8rem"} />
               </div>
+            ) : (
+              <div
+                className="flex flex-row items-center cursor-pointer"
+                onClick={() => setDarkMode(!darkMode)}
+              >
+                Dark
+                <Moon className="flex ml-1" size={"0.8rem"} />
+              </div>
+            )}
+            <div
+              className="flex flex-row items-center cursor-pointer"
+              onClick={() => setDistrictOnly(!districtOnly)}
+            >
+              {!districtOnly ? "DISTRICT" : "LSGD"}
+              <Target className="flex ml-1" size={"0.8rem"} />
             </div>
-            <ChevronLeft
-              size={"1rem"}
-              className="transform group-hover:scale-0 transition duration-150 ease-in-out cursor-pointer relative right-0"
-            />
           </div>
+          <ChevronDown
+            size={"0.8rem"}
+            className="transform group-hover:scale-0 transition duration-150 ease-in-out cursor-pointer absolute right-0"
+          />
         </div>
       </div>
-      {routeResult(stats, zones, hotspots, darkMode, districtOnly)}
+      {!route ? <div>Not found</div> : route}
     </div>
   ) : (
     <div className="flex h-screen w-screen items-center justify-center overflow-hidden">
@@ -124,9 +160,4 @@ function App() {
   );
 }
 
-let App_ = App;
-if (process.env.NODE_ENV === "production") {
-  App_ = App;
-}
-
-export default App_;
+export default hot(module)(App);

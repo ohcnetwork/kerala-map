@@ -5,8 +5,8 @@
   "dependencies": {
     "@urbica/react-map-gl": "^1.13.1",
     "axios": "^0.19.2",
-    "hookrouter": "^1.2.3",
     "mapbox-gl": "^1.10.0",
+    "raviger": "^1.4.2",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-feather": "^2.0.8"
@@ -32,6 +32,6 @@
     "cssnano": "^4.1.10",
     "poi": "^12.8.0",
     "react-hot-loader": "^4.12.21",
-    "tailwindcss": "^1.4.5"
+    "tailwindcss": "^1.4.6"
   }
 }
