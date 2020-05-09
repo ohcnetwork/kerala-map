@@ -72,7 +72,7 @@ function App() {
 
   return fetched ? (
     <div
-      className={`flex relative min-h-screen min-w-screen overflow-x-hidden  font-inter ${
+      className={`flex relative min-h-screen min-w-screen overflow-x-hidden antialiased font-inter ${
         darkMode ? "bg-dark-500" : "bg-light-500"
       }`}
     >
@@ -81,10 +81,10 @@ function App() {
           darkMode ? "text-white" : "text-black"
         }`}
       >
-        <div className="leading-none font-extrabold tracking-wider text-xl lg:text-3xl text-right">
-          HOTSPOT MAP
+        <div className="leading-none font-extrabold tracking-wider text-xl lg:text-3xl text-right select-none">
+          HOTSPOTS MAP
         </div>
-        <div className="flex text-mobilexs lg:text-mobile content-center">
+        <div className="flex text-mobilexs lg:text-mobile content-center select-none">
           <p>Part of</p>
           <a
             className="inline w-12 lg: ml-1"

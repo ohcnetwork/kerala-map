@@ -13,11 +13,9 @@ export default function Zones({ darkMode }) {
   });
   return (
     <div
-      className={
-        "flex flex-col min-h-full min-w-full mt-16 lg:mt-0 p-4 " + darkMode
-          ? "text-white"
-          : "text-black"
-      }
+      className={`flex flex-col min-h-full min-w-full mt-10 lg:mt-0 p-4 ${
+        darkMode ? "text-white" : "text-black"
+      }`}
     >
       <div className="">To be implemented</div>
       <h1 id="hotspots" className="mb-64">
