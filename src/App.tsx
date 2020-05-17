@@ -8,10 +8,10 @@ import MapBox from "./components/MapBox";
 import { CARE } from "./constants";
 
 const routes = {
-  "/": ({ dark, stats, zones, care }) => (
+  "/": ({ dark, stats, zones, care }: any) => (
     <MapBox stats={stats} zones={zones} dark={dark} care={care} />
   ),
-  "/info": ({ dark }) => <Zones dark={dark} />,
+  "/info": ({ dark }: any) => <Zones dark={dark} />,
 };
 
 function App() {
