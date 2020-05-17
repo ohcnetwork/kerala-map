@@ -45,23 +45,6 @@ h3 {
   }
 }
 
-.card {
-  animation: card 500ms ease-in-out;
-}
-
-@keyframes card {
-  0% {
-    transform-origin: top left;
-    transform: scale(0);
-    opacity: 0;
-  }
-  100% {
-    transform-origin: top left;
-    transform: scale(1);
-    opacity: 100;
-  }
-}
-
 @import url("https://fonts.googleapis.com/css?family=Inter:100,200,300,400,500,600,700,800,900&display=swap");
 
 /*! purgecss start ignore */

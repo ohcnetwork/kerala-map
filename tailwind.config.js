@@ -7,8 +7,10 @@ module.exports = {
         inter: ["Inter", "sans-serif"],
       },
       fontSize: {
-        mobilexs: ".55rem",
-        mobile: ".65rem",
+        mobilexs: ".35rem",
+        mobiles: ".45rem",
+        mobile: ".55rem",
+        mobilel: ".65rem",
         sm2: ".965rem",
       },
       translate: {
@@ -40,6 +42,12 @@ module.exports = {
           800: "#5F6060",
           900: "#3F4040",
         },
+      },
+      opacity: {
+        "10": "0.1",
+      },
+      padding: {
+        sm: "0.175rem",
       },
     },
 

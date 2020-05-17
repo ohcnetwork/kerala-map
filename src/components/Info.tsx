@@ -1,7 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
 import { useHash } from "raviger";
+import React, { useEffect } from "react";
 
-export default function Zones({ darkMode }) {
+export default function Zones({ dark }) {
   const id = useHash();
   useEffect(() => {
     const el = document.getElementById(id);
@@ -14,7 +14,7 @@ export default function Zones({ darkMode }) {
   return (
     <div
       className={`flex flex-col min-h-full min-w-full mt-10 lg:mt-0 p-4 ${
-        darkMode ? "text-white" : "text-black"
+        dark ? "text-white" : "text-black"
       }`}
     >
       <div className="">To be implemented</div>

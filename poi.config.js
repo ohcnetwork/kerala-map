@@ -1,4 +1,8 @@
-
 module.exports = {
-  entry: 'src/index',
-}
+  entry: "src/index",
+  plugins: [
+    {
+      resolve: "@poi/plugin-typescript",
+    },
+  ],
+};

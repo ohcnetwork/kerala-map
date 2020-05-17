@@ -5,8 +5,8 @@
   "dependencies": {
     "@urbica/react-map-gl": "^1.13.1",
     "axios": "^0.19.2",
-    "mapbox-gl": "^1.10.0",
-    "raviger": "^1.4.2",
+    "mapbox-gl": "^1.10.1",
+    "raviger": "^1.4.3",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-feather": "^2.0.8"
@@ -28,10 +28,16 @@
     ]
   },
   "devDependencies": {
+    "@poi/plugin-typescript": "^12.3.1",
+    "@types/mapbox-gl": "^1.10.1",
+    "@types/node": "^14.0.1",
+    "@types/react": "^16.9.35",
+    "@types/react-dom": "^16.9.8",
     "autoprefixer": "^9.7.6",
     "cssnano": "^4.1.10",
     "poi": "^12.8.0",
     "react-hot-loader": "^4.12.21",
-    "tailwindcss": "^1.4.6"
+    "tailwindcss": "^1.4.6",
+    "typescript": "^3.9.2"
   }
 }
