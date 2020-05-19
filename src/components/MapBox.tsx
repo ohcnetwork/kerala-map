@@ -1,9 +1,4 @@
-import MapGL, {
-  Filter,
-  GeolocateControl,
-  Layer,
-  Source,
-} from "@urbica/react-map-gl";
+import MapGL, { Filter, GeolocateControl, Layer, Source } from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
 import districtGeoData from "../assets/data/kerala_district.json";
 import lsgdGeoData from "../assets/data/kerala_lsgd.json";
@@ -26,6 +21,10 @@ export default function MapBox({ dark, stats, zones, care }) {
     confirmed: 0,
     deceased: 0,
     recovered: 0,
+    total_obs: 0,
+    hospital_obs: 0,
+    home_obs: 0,
+    hospital_today: 0,
   });
 
   useEffect(() => {
@@ -44,17 +43,29 @@ export default function MapBox({ dark, stats, zones, care }) {
     let confirmed = 0;
     let deceased = 0;
     let recovered = 0;
+    let total_obs = 0;
+    let hospital_obs = 0;
+    let home_obs = 0;
+    let hospital_today = 0;
     Object.keys(stats.latest).forEach((d) => {
       active = Math.max(active, stats.latest[d].active);
       confirmed = Math.max(confirmed, stats.latest[d].confirmed);
       deceased = Math.max(deceased, stats.latest[d].deceased);
       recovered = Math.max(recovered, stats.latest[d].recovered);
+      total_obs = Math.max(total_obs, stats.latest[d].total_obs);
+      hospital_obs = Math.max(hospital_obs, stats.latest[d].hospital_obs);
+      home_obs = Math.max(home_obs, stats.latest[d].home_obs);
+      hospital_today = Math.max(hospital_today, stats.latest[d].hospital_today);
     });
     setStatsMax({
       active: active,
       confirmed: confirmed,
       deceased: deceased,
       recovered: recovered,
+      total_obs: total_obs,
+      hospital_obs: hospital_obs,
+      home_obs: home_obs,
+      hospital_today: hospital_today,
     });
   }, []);
 
@@ -105,15 +116,14 @@ export default function MapBox({ dark, stats, zones, care }) {
     if (mode === MODE.HOTSPOTS_DISTRICT || mode === MODE.HOTSPOTS_LSGD) {
       hotspotActive(event);
     }
-    if (mode === MODE.CARE_VENTILATOR || mode === MODE.CARE_ICU) {
+    if (
+      mode === MODE.CARE_VENTILATOR ||
+      mode === MODE.CARE_ICU ||
+      mode === MODE.CARE_HOSPITALS
+    ) {
       careActive(event);
     }
-    if (
-      mode === MODE.STATS_ACTIVE ||
-      mode === MODE.STATS_CONFIRMED ||
-      mode === MODE.STATS_DEATH ||
-      mode === MODE.STATS_RECOVERED
-    ) {
+    if (mode <= MODE.STATS_CONFIRMED) {
       statsActive(event);
     }
   };
@@ -241,6 +251,30 @@ export default function MapBox({ dark, stats, zones, care }) {
       );
       c = STATS.COLOR.RECOVERED;
       k = stats.latest[key].recovered;
+    } else if (mode === MODE.STATS_TOTAL_OBS) {
+      Object.keys(stats.latest).forEach(
+        (d) => (a = Math.max(a, stats.latest[d].total_obs))
+      );
+      c = STATS.COLOR.TOTAL_OBS;
+      k = stats.latest[key].total_obs;
+    } else if (mode === MODE.STATS_HOSOBS) {
+      Object.keys(stats.latest).forEach(
+        (d) => (a = Math.max(a, stats.latest[d].hospital_obs))
+      );
+      c = STATS.COLOR.HOS_OBS;
+      k = stats.latest[key].hospital_obs;
+    } else if (mode === MODE.STATS_HOME_OBS) {
+      Object.keys(stats.latest).forEach(
+        (d) => (a = Math.max(a, stats.latest[d].home_obs))
+      );
+      c = STATS.COLOR.HOME_OBS;
+      k = stats.latest[key].home_obs;
+    } else if (mode === MODE.STATS_HOSTODAY) {
+      Object.keys(stats.latest).forEach(
+        (d) => (a = Math.max(a, stats.latest[d].hospital_today))
+      );
+      c = STATS.COLOR.HOS_TODAY;
+      k = stats.latest[key].hospital_today;
     }
     return ["interpolate", ["linear"], k, 0, dark ? "white" : "black", a, c];
   };
@@ -255,6 +289,14 @@ export default function MapBox({ dark, stats, zones, care }) {
       k = stats.latest[key].deceased / statsMax.deceased;
     } else if (mode === MODE.STATS_RECOVERED) {
       k = stats.latest[key].recovered / statsMax.recovered;
+    } else if (mode === MODE.STATS_TOTAL_OBS) {
+      k = stats.latest[key].total_obs / statsMax.total_obs;
+    } else if (mode === MODE.STATS_HOSOBS) {
+      k = stats.latest[key].hospital_obs / statsMax.hospital_obs;
+    } else if (mode === MODE.STATS_HOME_OBS) {
+      k = stats.latest[key].home_obs / statsMax.home_obs;
+    } else if (mode === MODE.STATS_HOSTODAY) {
+      k = stats.latest[key].hospital_today / statsMax.hospital_today;
     }
     return k * STATS.HEIGHT_MULTIPLIER;
   };
@@ -291,12 +333,7 @@ export default function MapBox({ dark, stats, zones, care }) {
         >
           <Source id="district" type="geojson" data={districtGeoData} />
           <Source id="lsgd" type="geojson" data={lsgdGeoData} />
-          <Source id="care-icus" type="geojson" data={care.icus} />
-          <Source
-            id="care-ventilators"
-            type="geojson"
-            data={care.ventilators}
-          />
+          <Source id="care" type="geojson" data={care.hospitals} />
           {mode === MODE.HOTSPOTS_LSGD && (
             <div>
               <GeolocateControl
@@ -322,9 +359,9 @@ export default function MapBox({ dark, stats, zones, care }) {
                 layerId="lsgd-hot"
                 filter={["in", "LSGD", ...zones.hotspots]}
               />
-              {Object.keys(zones.districts).map((key, index) => {
+              {Object.keys(zones.districts).map((key, i) => {
                 return (
-                  <div>
+                  <div key={i}>
                     <Layer
                       id={`lsgd-not-hot-${key}`}
                       type="fill-extrusion"
@@ -369,9 +406,9 @@ export default function MapBox({ dark, stats, zones, care }) {
                 onGeolocate={onGeolocate}
                 onError={onError}
               />
-              {Object.keys(zones.districts).map((key, index) => {
+              {Object.keys(zones.districts).map((key, i) => {
                 return (
-                  <div>
+                  <div key={i}>
                     <Layer
                       id={`zone-district-${key}`}
                       type="fill-extrusion"
@@ -399,14 +436,11 @@ export default function MapBox({ dark, stats, zones, care }) {
               {GenLL("district")}
             </div>
           )}
-          {(mode === MODE.STATS_ACTIVE ||
-            mode === MODE.STATS_CONFIRMED ||
-            mode === MODE.STATS_DEATH ||
-            mode === MODE.STATS_RECOVERED) && (
+          {mode <= MODE.STATS_CONFIRMED && (
             <div>
-              {Object.keys(zones.districts).map((key, index) => {
+              {Object.keys(zones.districts).map((key, i) => {
                 return (
-                  <div>
+                  <div key={i}>
                     <Layer
                       id={`zone-district-${key}`}
                       type="fill-extrusion"
@@ -437,11 +471,7 @@ export default function MapBox({ dark, stats, zones, care }) {
               <Layer
                 id="points"
                 type="circle"
-                source={
-                  mode === MODE.CARE_VENTILATOR
-                    ? "care-ventilators"
-                    : "care-icus"
-                }
+                source={"care"}
                 paint={{
                   "circle-radius": [
                     "case",
@@ -452,7 +482,21 @@ export default function MapBox({ dark, stats, zones, care }) {
                   "circle-color": [
                     "interpolate",
                     ["linear"],
-                    ["/", ["get", "current"], ["get", "total"]],
+                    [
+                      "/",
+                      [
+                        "get",
+                        mode === MODE.CARE_VENTILATOR
+                          ? "ventilator_current"
+                          : "icu_current",
+                      ],
+                      [
+                        "get",
+                        mode === MODE.CARE_VENTILATOR
+                          ? "ventilator_total"
+                          : "icu_total",
+                      ],
+                    ],
                     0,
                     "green",
                     0.5,
@@ -460,6 +504,39 @@ export default function MapBox({ dark, stats, zones, care }) {
                     1,
                     "red",
                   ],
+                  "circle-stroke-color": dark ? "white" : "black",
+                  "circle-stroke-width": 1,
+                  "circle-stroke-opacity": 0.5,
+                }}
+                onHover={onHover}
+                onLeave={onLeave}
+                onClick={onClick}
+              />
+              <Filter
+                layerId="points"
+                filter={[
+                  "!=",
+                  mode === MODE.CARE_ICU ? "icu_total" : "ventilator_total",
+                  0,
+                ]}
+              />
+            </div>
+          )}
+          {mode === MODE.CARE_HOSPITALS && (
+            <div>
+              {GenLL("district")}
+              <Layer
+                id="hospitals"
+                type="circle"
+                source={"care"}
+                paint={{
+                  "circle-radius": [
+                    "case",
+                    ["==", ["get", "id"], hoveredEntity && hoveredEntity.id],
+                    10,
+                    6,
+                  ],
+                  "circle-color": "white",
                   "circle-stroke-color": dark ? "white" : "black",
                   "circle-stroke-width": 1,
                   "circle-stroke-opacity": 0.5,

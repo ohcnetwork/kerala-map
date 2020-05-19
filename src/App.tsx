@@ -22,7 +22,9 @@ function App() {
     lastUpdated: "",
   });
   const [zones, setZones] = useState({ districts: {}, hotspots: [] });
-  const [care, setCare] = useState({ icus: {}, ventilators: {} });
+  const [care, setCare] = useState({
+    hospitals: {},
+  });
   const [fetched, setFetched] = useState(false);
   const route = useRoutes(routes, {
     routeProps: { dark, stats, zones, care },
@@ -50,10 +52,11 @@ function App() {
           "https://careapi.coronasafe.in/api/v1/facility_summary/",
           { auth: { username: CARE.USERNAME, password: CARE.PASSWORD } }
         );
-        let hospitals = Object.values(res.data);
-        const reducer = (a, r, t) => {
-          let z = r.availability.find((k) => k.room_type === t);
-          if (r.location && z) {
+        let hos = Object.values(res.data);
+        const reducer = (a, r) => {
+          let _icu = r.availability.find((k) => k.room_type === 10);
+          let _ven = r.availability.find((k) => k.room_type === 20);
+          if (r.location && (_icu || _ven)) {
             a.push({
               type: "Feature",
               geometry: {
@@ -64,24 +67,23 @@ function App() {
                 id: r.id,
                 name: r.name,
                 address: r.address,
+                district: r.district_object.name,
                 phoneNo: r.phone_number,
                 type: r.facility_type,
-                current: z.current_capacity,
-                total: z.total_capacity,
+                icu_current: _icu ? _icu.current_capacity : 0,
+                icu_total: _icu ? _icu.total_capacity : 0,
+                ventilator_current: _ven ? _ven.current_capacity : 0,
+                ventilator_total: _ven ? _ven.total_capacity : 0,
               },
             });
           }
           return a;
         };
-        let ventilators = {
+        let hospitals = {
           type: "FeatureCollection",
-          features: hospitals.reduce((a, r) => reducer(a, r, 20), []),
+          features: hos.reduce(reducer, []),
         };
-        let icus = {
-          type: "FeatureCollection",
-          features: hospitals.reduce((a, r) => reducer(a, r, 10), []),
-        };
-        setCare({ icus: icus, ventilators: ventilators });
+        setCare({ hospitals: hospitals });
         setZones({ districts: districts, hotspots: hotspots });
         setStats({
           latest: latest,

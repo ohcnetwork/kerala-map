@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Plus } from "react-feather";
-import { MODE, MODE_LANG, ZONE } from "../constants";
+import {
+  MODE,
+  MODE_BUTTON,
+  MODE_LANG,
+  MODE_SUBHEADER_LANG,
+  STATS,
+  ZONE,
+} from "../constants";
 
 export default function Card({
   mode,
@@ -24,9 +31,9 @@ export default function Card({
   const [controlTip, setControlTip] = useState("");
 
   const distStats = (d) => {
-    return ["confirmed", "recovered", "deceased", "active"].map((a) => (
-      <div>
-        <div className="text-mobiles lg:text-xs">{a}</div>
+    return Object.keys(STATS.LANG).map((a, i) => (
+      <div key={i}>
+        <div className="text-mobiles lg:text-xs">{STATS.LANG[a]}</div>
         <div className="font-semibold text-mobile lg:text-sm">
           {stats.latest[d][a]}
         </div>
@@ -35,9 +42,9 @@ export default function Card({
   };
 
   const statsinfo = () => {
-    return ["confirmed", "recovered", "deceased", "active"].map((a) => (
-      <div>
-        <div className="text-mobiles lg:text-xs">{a}</div>
+    return Object.keys(STATS.LANG).map((a, i) => (
+      <div key={i}>
+        <div className="text-mobiles lg:text-xs">{STATS.LANG[a]}</div>
         <div className="font-semibold text-mobile lg:text-sm">
           {stats.summary[a]}
         </div>
@@ -80,10 +87,24 @@ export default function Card({
   };
 
   const hosinfo = () => {
-    let data = mode === MODE.CARE_VENTILATOR ? care.ventilators : care.icus;
+    let data = care.hospitals;
     let hos = data.features.length;
-    let total = data.features.reduce((a, r) => a + r.properties.total, 0);
-    let current = data.features.reduce((a, r) => a + r.properties.current, 0);
+    let icu_current = data.features.reduce(
+      (a, r) => a + r.properties.icu_current,
+      0
+    );
+    let icu_total = data.features.reduce(
+      (a, r) => a + r.properties.icu_total,
+      0
+    );
+    let ventilator_current = data.features.reduce(
+      (a, r) => a + r.properties.ventilator_current,
+      0
+    );
+    let ventilator_total = data.features.reduce(
+      (a, r) => a + r.properties.ventilator_total,
+      0
+    );
     return (
       <div className="flex flex-col uppercase mb-2">
         <div>
@@ -91,20 +112,25 @@ export default function Card({
           <div className="font-semibold text-mobile lg:text-sm">{hos}</div>
         </div>
         <div>
-          <div className="text-mobiles lg:text-xs">CURRENT CAPACITY</div>
-          <div className="font-semibold text-mobile lg:text-sm">{current}</div>
+          <div className="text-mobiles lg:text-xs">ICU CAPACITY</div>
+          <div className="font-semibold text-mobile lg:text-sm">
+            {icu_current}/{icu_total}
+          </div>
         </div>
         <div>
-          <div className="text-mobiles lg:text-xs">TOTAL CAPACITY</div>
-          <div className="font-semibold text-mobile lg:text-sm">{total}</div>
+          <div className="text-mobiles lg:text-xs">VENTILATOR CAPACITY</div>
+          <div className="font-semibold text-mobile lg:text-sm">
+            {ventilator_current}/{ventilator_total}
+          </div>
         </div>
       </div>
     );
   };
 
   const subControl = (l: string[]) => {
-    return l.map((a) => (
+    return l.map((a, i) => (
       <div
+        key={i}
         className={`text-mobilexs lg:text-xs pointer-events-auto cursor-pointer bg-opacity-50 font-semibold leading-none p-sm ${
           dark ? "bg-black" : "bg-white"
         }`}
@@ -114,7 +140,7 @@ export default function Card({
         }
         onMouseLeave={() => setControlTip("")}
       >
-        {a.split("_")[1]}
+        {MODE_BUTTON.find((j) => j[0] === MODE[a])[1].toString()}
       </div>
     ));
   };
@@ -123,8 +149,9 @@ export default function Card({
     return (
       <div className="flex flex-col">
         <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 text-center mb-1 font-semibold text-mobiles lg:text-sm leading-none text-center">
-          {["STATS", "ZONES", "CARE"].map((a) => (
+          {["STATS", "ZONES", "CARE"].map((a, i) => (
             <div
+              key={i}
               className={`pointer-events-auto cursor-pointer bg-opacity-50 p-sm ${
                 dark ? "bg-black" : "bg-white"
               }`}
@@ -140,17 +167,22 @@ export default function Card({
             </div>
           ))}
         </div>
-        <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 text-center mb-1 font-semibold text-mobiles lg:text-sm leading-none text-center">
+        <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 grid-cols-none grid-rows-4 text-center mb-1 font-semibold text-mobiles lg:text-sm leading-none text-center">
           {modeCard === "STATS" &&
             subControl([
               "STATS_ACTIVE",
               "STATS_DEATH",
               "STATS_RECOVERED",
               "STATS_CONFIRMED",
+              "STATS_TOTAL_OBS",
+              "STATS_HOSOBS",
+              "STATS_HOME_OBS",
+              "STATS_HOSTODAY",
             ])}
           {modeCard === "ZONES" &&
             subControl(["HOTSPOTS_LSGD", "HOTSPOTS_DISTRICT"])}
-          {modeCard === "CARE" && subControl(["CARE_ICU", "CARE_VENTILATOR"])}
+          {modeCard === "CARE" &&
+            subControl(["CARE_ICU", "CARE_VENTILATOR", "CARE_HOSPITALS"])}
         </div>
         {controlTip && (
           <div
@@ -166,28 +198,13 @@ export default function Card({
   };
 
   const header = () => {
-    let h = "";
-    let sh = "";
-    if (mode <= MODE.STATS_CONFIRMED) {
-      h = "STATS";
-      sh =
-        mode === MODE.STATS_ACTIVE
-          ? "ACTIVE CASES"
-          : mode === MODE.STATS_CONFIRMED
-          ? "CONFIRMED CASES"
-          : mode === MODE.STATS_DEATH
-          ? "DECEASED CASES"
-          : "RECOVERED CASES";
-    } else if (mode <= 5) {
-      h = "ZONE";
-      sh =
-        mode === MODE.HOTSPOTS_DISTRICT
-          ? "DISTRICT ZONES"
-          : "HOTSPOTS AND LSGD ZONES";
-    } else {
-      h = "CARE";
-      sh = mode === MODE.CARE_ICU ? "ICU CAPACITY" : "VENTILATOR CAPACITY";
-    }
+    let h =
+      mode <= MODE.STATS_CONFIRMED
+        ? "STATS"
+        : mode <= MODE.HOTSPOTS_DISTRICT
+        ? "ZONE"
+        : "CARE";
+    let sh = MODE_SUBHEADER_LANG.find((j) => j[0] === mode)[1].toString();
     return (
       <div className="flex flex-col mb-2">
         <div className="flex font-extrabold">{h}</div>
@@ -232,8 +249,8 @@ export default function Card({
                       </div>
                     ) : (
                       <div className="flex flex-col uppercase mb-2">
-                        {Object.entries(lens).map((a) => (
-                          <div>
+                        {Object.entries(lens).map((a, i) => (
+                          <div key={i}>
                             <div
                               className={`text-mobiles lg:text-xs ${
                                 ZONE.COLOR_TEXT[a[0]]
@@ -278,7 +295,9 @@ export default function Card({
                 )}
               </div>
             )}
-            {(mode === MODE.CARE_ICU || mode === MODE.CARE_VENTILATOR) && (
+            {(mode === MODE.CARE_ICU ||
+              mode === MODE.CARE_VENTILATOR ||
+              mode === MODE.CARE_HOSPITALS) && (
               <div className="flex flex-col">
                 {header()}
                 {hoveredEntity && hoveredEntity.name ? (
@@ -307,12 +326,31 @@ export default function Card({
                         {hoveredEntity.type}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-mobiles lg:text-xs">CAPACITY</div>
-                      <div className="font-semibold text-mobile lg:text-sm">
-                        {hoveredEntity.current}/{hoveredEntity.total}
+                    {hoveredEntity.icu_total !== 0 && (
+                      <div>
+                        <div className="text-mobiles lg:text-xs">
+                          ICU CAPACITY
+                        </div>
+                        <div className="font-semibold text-mobile lg:text-sm">
+                          {hoveredEntity.icu_current}/{hoveredEntity.icu_total}
+                        </div>
                       </div>
+                    )}
+                    {hoveredEntity.ventilator_total !== 0 && (
+                      <div>
+                        <div className="text-mobiles lg:text-xs">
+                          VENTILATOR CAPACITY
+                        </div>
+                        <div className="font-semibold text-mobile lg:text-sm">
+                          {hoveredEntity.ventilator_current}/
+                          {hoveredEntity.ventilator_total}
+                        </div>
+                      </div>
+                    )}
+                    <div className="text-mobiles lg:text-xs mt-2">
+                      DISTRICT STATS
                     </div>
+                    {distStats(hoveredEntity.district)}
                   </div>
                 ) : (
                   hosinfo()
@@ -322,10 +360,7 @@ export default function Card({
                 </div>
               </div>
             )}
-            {(mode === MODE.STATS_ACTIVE ||
-              mode === MODE.STATS_CONFIRMED ||
-              mode === MODE.STATS_DEATH ||
-              mode === MODE.STATS_RECOVERED) && (
+            {mode <= MODE.STATS_CONFIRMED && (
               <div className="flex flex-col">
                 {header()}
                 {hoveredEntity && hoveredEntity.p ? (
