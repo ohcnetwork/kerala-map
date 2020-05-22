@@ -1,15 +1,20 @@
-import axios from "axios";
 import { Link, useRoutes } from "raviger";
 import React, { useEffect, useState } from "react";
 import { Activity, ChevronDown, Info, Map, Moon, Sun } from "react-feather";
 import { hot } from "react-hot-loader";
 import Zones from "./components/Info";
 import MapBox from "./components/MapBox";
-import { CARE } from "./constants";
+import { getCareStats, getKeralaStats } from "./requests";
 
 const routes = {
-  "/": ({ dark, stats, zones, care }: any) => (
-    <MapBox stats={stats} zones={zones} dark={dark} care={care} />
+  "/": ({ dark, stats, zones, care, setCare }: any) => (
+    <MapBox
+      stats={stats}
+      zones={zones}
+      dark={dark}
+      care={care}
+      setCare={setCare}
+    />
   ),
   "/info": ({ dark }: any) => <Zones dark={dark} />,
 };
@@ -27,70 +32,32 @@ function App() {
   });
   const [fetched, setFetched] = useState(false);
   const route = useRoutes(routes, {
-    routeProps: { dark, stats, zones, care },
+    routeProps: { dark, stats, zones, care, setCare },
   });
 
   useEffect(() => {
     if (!fetched) {
       (async () => {
-        let res = await axios.get(
-          "https://keralastats.coronasafe.live/latest.json"
-        );
-        let latest = res.data.summary;
-        res = await axios.get(
-          "https://keralastats.coronasafe.live/summary.json"
-        );
-        let summary = res.data.summary;
-        let lastUpdated = res.data.last_updated;
-        res = await axios.get(
-          "https://keralastats.coronasafe.live/hotspots.json"
-        );
-        let hotspots = res.data.hotspots.reduce((a, r) => [...a, r.lsgd], []);
-        res = await axios.get("https://keralastats.coronasafe.live/zones.json");
-        let districts = res.data.districts;
-        res = await axios.get(
-          "https://careapi.coronasafe.in/api/v1/facility_summary/",
-          { auth: { username: CARE.USERNAME, password: CARE.PASSWORD } }
-        );
-        let hos = Object.values(res.data);
-        const reducer = (a, r) => {
-          let _icu = r.availability.find((k) => k.room_type === 10);
-          let _ven = r.availability.find((k) => k.room_type === 20);
-          if (r.location && (_icu || _ven)) {
-            a.push({
-              type: "Feature",
-              geometry: {
-                type: "Point",
-                coordinates: [r.location.longitude, r.location.latitude],
-              },
-              properties: {
-                id: r.id,
-                name: r.name,
-                address: r.address,
-                district: r.district_object.name,
-                phoneNo: r.phone_number,
-                type: r.facility_type,
-                icu_current: _icu ? _icu.current_capacity : 0,
-                icu_total: _icu ? _icu.total_capacity : 0,
-                ventilator_current: _ven ? _ven.current_capacity : 0,
-                ventilator_total: _ven ? _ven.total_capacity : 0,
-              },
-            });
-          }
-          return a;
-        };
-        let hospitals = {
-          type: "FeatureCollection",
-          features: hos.reduce(reducer, []),
-        };
-        setCare({ hospitals: hospitals });
-        setZones({ districts: districts, hotspots: hotspots });
-        setStats({
-          latest: latest,
-          summary: summary,
-          lastUpdated: lastUpdated,
-        });
-        setFetched(true);
+        try {
+          let {
+            latest,
+            summary,
+            hotspots,
+            districts,
+            lastUpdated,
+          } = await getKeralaStats();
+          let { hospitals } = await getCareStats(true);
+          setCare({ hospitals: hospitals });
+          setZones({ districts: districts, hotspots: hotspots });
+          setStats({
+            latest: latest,
+            summary: summary,
+            lastUpdated: lastUpdated,
+          });
+          setFetched(true);
+        } catch (error) {
+          console.log(error);
+        }
       })();
     }
   }, [fetched]);

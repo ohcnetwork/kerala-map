@@ -1,13 +1,18 @@
-import MapGL, { Filter, GeolocateControl, Layer, Source } from "@urbica/react-map-gl";
+import MapGL, {
+  Filter,
+  GeolocateControl,
+  Layer,
+  Source,
+} from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
 import districtGeoData from "../assets/data/kerala_district.json";
 import lsgdGeoData from "../assets/data/kerala_lsgd.json";
-import { MAP, MODE, STATS, ZONE } from "../constants";
+import { MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
 import Card from "./Card";
 
-export default function MapBox({ dark, stats, zones, care }) {
+export default function MapBox({ dark, stats, zones, care, setCare }) {
   const mapRef = useRef(null);
-  const [mode, setMode] = useState(MODE.STATS_ACTIVE);
+  const [mode, setMode] = useState(MODE_DEFAULT);
   const [clicked, setClicked] = useState(false);
   const [hoveredEntity, setHoveredEntity] = useState(null);
   const [geolocatedLoc, setGeolocatedLoc] = useState(null);
@@ -313,6 +318,7 @@ export default function MapBox({ dark, stats, zones, care }) {
         dark={dark}
         geolocatedLoc={geolocatedLoc}
         setGeolocatedLoc={setGeolocatedLoc}
+        setCare={setCare}
       />
       <div
         className="flex flex-grow w-full lg:w-5/6"
@@ -333,7 +339,9 @@ export default function MapBox({ dark, stats, zones, care }) {
         >
           <Source id="district" type="geojson" data={districtGeoData} />
           <Source id="lsgd" type="geojson" data={lsgdGeoData} />
-          <Source id="care" type="geojson" data={care.hospitals} />
+          {care.hospitals.features && (
+            <Source id="care" type="geojson" data={care.hospitals} />
+          )}
           {mode === MODE.HOTSPOTS_LSGD && (
             <div>
               <GeolocateControl
@@ -391,10 +399,8 @@ export default function MapBox({ dark, stats, zones, care }) {
                 );
               })}
               <div>
-                {GenLL("lsgd")}
                 {GenLL("district", false)}
-                {/* {LSGDLL()}
-                {DistrictLL(false)} */}
+                {GenLL("lsgd")}
               </div>
             </div>
           )}

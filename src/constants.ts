@@ -2,8 +2,8 @@ export const MAP = {
   ACCESS_TOKEN: process.env.POI_APP_MAPBOX_ACCESS_TOKEN,
   MAX_ZOOM: 11.824974653320604,
   LINE: {
-    DISTRICT: { DARK: "#ffffff", LIGHT: "#D2D5D5" },
-    LSGD: { DARK: "#D2D5D5", LIGHT: "#BDC0C0" },
+    DISTRICT: { DARK: "#484A4A", LIGHT: "#FFFFFF" },
+    LSGD: { DARK: "#5F6060", LIGHT: "#FFFFFF" },
   },
   MAXBOUNDS: [
     [71.05, 8.12],
@@ -13,11 +13,6 @@ export const MAP = {
     DARK: "mapbox://styles/saanu09xs/ck9vk938f10811irwhfr1gn4c",
     LIGHT: "mapbox://styles/saanu09xs/ck9w8haky07k91is3pn3dmlxj",
   },
-};
-
-export const CARE = {
-  USERNAME: process.env.POI_APP_CARE_USERNAME,
-  PASSWORD: process.env.POI_APP_CARE_PASSWORD,
 };
 
 export const ZONE = {
@@ -133,3 +128,4 @@ export const MODE_SUBHEADER_LANG = [
   [MODE.CARE_VENTILATOR, "VENTILATOR CAPACITY"],
   [MODE.CARE_HOSPITALS, "HOSPITALS"],
 ];
+export const MODE_DEFAULT = MODE.HOTSPOTS_LSGD;

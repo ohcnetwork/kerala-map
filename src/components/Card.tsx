@@ -3,11 +3,13 @@ import { Plus } from "react-feather";
 import {
   MODE,
   MODE_BUTTON,
+  MODE_DEFAULT,
   MODE_LANG,
   MODE_SUBHEADER_LANG,
   STATS,
   ZONE,
 } from "../constants";
+import { careLogin, getCareStats } from "../requests";
 
 export default function Card({
   mode,
@@ -19,6 +21,7 @@ export default function Card({
   hoveredEntity,
   geolocatedLoc,
   setGeolocatedLoc,
+  setCare,
 }) {
   const lens = {
     CONTAINMENT: zones.hotspots.length,
@@ -29,6 +32,63 @@ export default function Card({
   const [cardEnabled, setCardEnabled] = useState(true);
   const [modeCard, setModeCard] = useState("");
   const [controlTip, setControlTip] = useState("");
+  const initCareData = {
+    showLogin: false,
+    mode: MODE.CARE_HOSPITALS,
+    loginInfo: "",
+    formData: {
+      username: "",
+      password: "",
+    },
+  };
+  const [careData, setCareData] = useState(initCareData);
+
+  const handleChange = (e: any) => {
+    const { value, id } = e.target;
+    const fieldValue = Object.assign({}, careData.formData);
+    fieldValue[id] = value;
+    if (id === "username") {
+      fieldValue[id] = value.toLowerCase();
+    }
+    setCareData({ ...careData, formData: fieldValue });
+  };
+
+  const validateData = () => {
+    let err = "";
+    err =
+      !careData.formData.password || !careData.formData.username
+        ? "Provide valid credentials"
+        : "";
+    if (err) {
+      setCareData({ ...careData, loginInfo: err });
+      return false;
+    }
+    return true;
+  };
+
+  const handleSubmit = (e: any) => {
+    e.preventDefault();
+    if (validateData()) {
+      (async () => {
+        try {
+          await careLogin(careData.formData);
+          let { hospitals } = await getCareStats();
+          setCare({ hospitals: hospitals });
+          setCareData(initCareData);
+          setMode(careData.mode);
+        } catch (error) {
+          setCareData({ ...careData, loginInfo: error.toString() });
+        }
+      })();
+    }
+  };
+
+  const logout = (e: any) => {
+    localStorage.removeItem("care_access_token");
+    localStorage.removeItem("care_refresh_token");
+    setCare({ hospitals: {} });
+    setMode(MODE_DEFAULT);
+  };
 
   const distStats = (d) => {
     return Object.keys(STATS.LANG).map((a, i) => (
@@ -127,6 +187,14 @@ export default function Card({
     );
   };
 
+  const changeMode = (m: number) => {
+    if (m >= 10 && !localStorage.getItem("care_access_token")) {
+      setCareData({ ...careData, showLogin: true, mode: m });
+    } else {
+      setMode(m);
+    }
+  };
+
   const subControl = (l: string[]) => {
     return l.map((a, i) => (
       <div
@@ -134,7 +202,7 @@ export default function Card({
         className={`text-mobilexs lg:text-xs pointer-events-auto cursor-pointer bg-opacity-50 font-semibold leading-none p-sm ${
           dark ? "bg-black" : "bg-white"
         }`}
-        onClick={() => setMode(MODE[a])}
+        onClick={() => changeMode(MODE[a])}
         onMouseEnter={() =>
           setControlTip(MODE_LANG.find((j) => j[0] === MODE[a])[1].toString())
         }
@@ -228,151 +296,207 @@ export default function Card({
             setCardEnabled(!cardEnabled);
           }}
         />
-        {(cardEnabled || geolocatedLoc) && (
+        {(cardEnabled || geolocatedLoc || careData.showLogin) && (
           <div
             className={`flex flex-col text-mobile lg:text-sm p-2 bg-opacity-50 mb-1 ${
               dark ? "bg-black" : "bg-white"
             } `}
           >
-            {(mode === MODE.HOTSPOTS_DISTRICT ||
-              mode === MODE.HOTSPOTS_LSGD) && (
-              <div className="flex flex-col">
-                {header()}
-                {!geolocatedLoc ? (
+            {!careData.showLogin ? (
+              <div>
+                {(mode === MODE.HOTSPOTS_DISTRICT ||
+                  mode === MODE.HOTSPOTS_LSGD) && (
                   <div className="flex flex-col">
-                    {hoveredEntity && hoveredEntity.p ? (
-                      <div>
-                        {info(hoveredEntity.p, hoveredEntity.z, true)}
-                        <div className="text-mobilexs lg:text-mobile">
-                          Hover/select an area for detailed information.
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col uppercase mb-2">
-                        {Object.entries(lens).map((a, i) => (
-                          <div key={i}>
-                            <div
-                              className={`text-mobiles lg:text-xs ${
-                                ZONE.COLOR_TEXT[a[0]]
-                              }`}
-                            >{`${
-                              a[0] == "CONTAINMENT" ? "LSGD" : "DISTRICTS"
-                            } IN ${a[0]}`}</div>
-                            <div className="font-semibold text-mobile lg:text-sm">
-                              {a[1]}
+                    {header()}
+                    {!geolocatedLoc ? (
+                      <div className="flex flex-col">
+                        {hoveredEntity && hoveredEntity.p ? (
+                          <div>
+                            {info(hoveredEntity.p, hoveredEntity.z, true)}
+                            <div className="text-mobilexs lg:text-mobile">
+                              Hover/select an area for detailed information.
                             </div>
                           </div>
-                        ))}
+                        ) : (
+                          <div className="flex flex-col uppercase mb-2">
+                            {Object.entries(lens).map((a, i) => (
+                              <div key={i}>
+                                <div
+                                  className={`text-mobiles lg:text-xs ${
+                                    ZONE.COLOR_TEXT[a[0]]
+                                  }`}
+                                >{`${
+                                  a[0] == "CONTAINMENT" ? "LSGD" : "DISTRICTS"
+                                } IN ${a[0]}`}</div>
+                                <div className="font-semibold text-mobile lg:text-sm">
+                                  {a[1]}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex flex-col">
-                    <div className="flex flex-col mb-2">
-                      <div className="uppercase font-semibold">You are in</div>
-                      <div
-                        className={`flex text-mobilel lg:text-base font-semibold ${
-                          ZONE.COLOR_TEXT[geolocatedLoc.z]
-                        }`}
-                      >
-                        {`${geolocatedLoc.z} ZONE`}
-                      </div>
-                      {/* <Link
+                    ) : (
+                      <div className="flex flex-col">
+                        <div className="flex flex-col mb-2">
+                          <div className="uppercase font-semibold">
+                            You are in
+                          </div>
+                          <div
+                            className={`flex text-mobilel lg:text-base font-semibold ${
+                              ZONE.COLOR_TEXT[geolocatedLoc.z]
+                            }`}
+                          >
+                            {`${geolocatedLoc.z} ZONE`}
+                          </div>
+                          {/* <Link
                         className="flex uppercase text-mobiles mt-0 pointer-events-auto"
                         href={"/info#zone-" + geolocatedLoc.z.toLowerCase()}
                       >
                         Click here for more info
                       </Link> */}
-                    </div>
-                    {info(geolocatedLoc.p, geolocatedLoc.z, false)}
+                        </div>
+                        {info(geolocatedLoc.p, geolocatedLoc.z, false)}
+                        <div
+                          className="uppercase text-mobilexs lg:text-mobiles pointer-events-auto cursor-pointer"
+                          onClick={() => setGeolocatedLoc(null)}
+                        >
+                          CLICK TO RETURN
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                {(mode === MODE.CARE_ICU ||
+                  mode === MODE.CARE_VENTILATOR ||
+                  mode === MODE.CARE_HOSPITALS) && (
+                  <div className="flex flex-col">
+                    {header()}
                     <div
-                      className="uppercase text-mobilexs lg:text-mobiles pointer-events-auto cursor-pointer"
-                      onClick={() => setGeolocatedLoc(null)}
+                      className="text-mobiles lg:text-mobilel absolute top-0 right-0 p-2 pointer-events-auto cursor-pointer"
+                      onClick={logout}
                     >
-                      CLICK TO RETURN
+                      LOGOUT
+                    </div>
+                    {hoveredEntity && hoveredEntity.name ? (
+                      <div className="flex flex-col uppercase mb-2">
+                        <div>
+                          <div className="text-mobiles lg:text-xs">NAME</div>
+                          <div className="font-semibold text-mobile lg:text-sm">
+                            {hoveredEntity.name}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-mobiles lg:text-xs">
+                            ADDRESSS
+                          </div>
+                          <div className="font-semibold text-mobile lg:text-sm">
+                            {hoveredEntity.address}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-mobiles lg:text-xs">PHONENO</div>
+                          <div className="font-semibold text-mobile lg:text-sm">
+                            {hoveredEntity.phoneNo}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-mobiles lg:text-xs">TYPE</div>
+                          <div className="font-semibold text-mobile lg:text-sm">
+                            {hoveredEntity.type}
+                          </div>
+                        </div>
+                        {hoveredEntity.icu_total !== 0 && (
+                          <div>
+                            <div className="text-mobiles lg:text-xs">
+                              ICU CAPACITY
+                            </div>
+                            <div className="font-semibold text-mobile lg:text-sm">
+                              {hoveredEntity.icu_current}/
+                              {hoveredEntity.icu_total}
+                            </div>
+                          </div>
+                        )}
+                        {hoveredEntity.ventilator_total !== 0 && (
+                          <div>
+                            <div className="text-mobiles lg:text-xs">
+                              VENTILATOR CAPACITY
+                            </div>
+                            <div className="font-semibold text-mobile lg:text-sm">
+                              {hoveredEntity.ventilator_current}/
+                              {hoveredEntity.ventilator_total}
+                            </div>
+                          </div>
+                        )}
+                        <div className="text-mobiles lg:text-xs mt-2">
+                          DISTRICT STATS
+                        </div>
+                        {distStats(hoveredEntity.district)}
+                      </div>
+                    ) : (
+                      hosinfo()
+                    )}
+                    <div className="text-mobilexs lg:text-mobile">
+                      Hover/select a point for detailed information.
+                    </div>
+                  </div>
+                )}
+                {mode <= MODE.STATS_CONFIRMED && (
+                  <div className="flex flex-col">
+                    {header()}
+                    {hoveredEntity && hoveredEntity.p ? (
+                      info(hoveredEntity.p, hoveredEntity.z, true)
+                    ) : (
+                      <div className="flex flex-col uppercase mb-2">
+                        {statsinfo()}
+                      </div>
+                    )}
+                    <div className="text-mobilexs lg:text-mobile">
+                      Hover/select a point for detailed information.
                     </div>
                   </div>
                 )}
               </div>
-            )}
-            {(mode === MODE.CARE_ICU ||
-              mode === MODE.CARE_VENTILATOR ||
-              mode === MODE.CARE_HOSPITALS) && (
+            ) : (
               <div className="flex flex-col">
-                {header()}
-                {hoveredEntity && hoveredEntity.name ? (
-                  <div className="flex flex-col uppercase mb-2">
-                    <div>
-                      <div className="text-mobiles lg:text-xs">NAME</div>
-                      <div className="font-semibold text-mobile lg:text-sm">
-                        {hoveredEntity.name}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-mobiles lg:text-xs">ADDRESSS</div>
-                      <div className="font-semibold text-mobile lg:text-sm">
-                        {hoveredEntity.address}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-mobiles lg:text-xs">PHONENO</div>
-                      <div className="font-semibold text-mobile lg:text-sm">
-                        {hoveredEntity.phoneNo}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-mobiles lg:text-xs">TYPE</div>
-                      <div className="font-semibold text-mobile lg:text-sm">
-                        {hoveredEntity.type}
-                      </div>
-                    </div>
-                    {hoveredEntity.icu_total !== 0 && (
-                      <div>
-                        <div className="text-mobiles lg:text-xs">
-                          ICU CAPACITY
-                        </div>
-                        <div className="font-semibold text-mobile lg:text-sm">
-                          {hoveredEntity.icu_current}/{hoveredEntity.icu_total}
-                        </div>
-                      </div>
-                    )}
-                    {hoveredEntity.ventilator_total !== 0 && (
-                      <div>
-                        <div className="text-mobiles lg:text-xs">
-                          VENTILATOR CAPACITY
-                        </div>
-                        <div className="font-semibold text-mobile lg:text-sm">
-                          {hoveredEntity.ventilator_current}/
-                          {hoveredEntity.ventilator_total}
-                        </div>
-                      </div>
-                    )}
-                    <div className="text-mobiles lg:text-xs mt-2">
-                      DISTRICT STATS
-                    </div>
-                    {distStats(hoveredEntity.district)}
+                <div className="flex flex-col mb-2">
+                  <div className="flex font-extrabold">CARE</div>
+                  <div className="flex text-mobiles lg:text-mobilel">
+                    LOGIN WITH CARE CREDENTIALS
                   </div>
-                ) : (
-                  hosinfo()
-                )}
-                <div className="text-mobilexs lg:text-mobile">
-                  Hover/select a point for detailed information.
                 </div>
-              </div>
-            )}
-            {mode <= MODE.STATS_CONFIRMED && (
-              <div className="flex flex-col">
-                {header()}
-                {hoveredEntity && hoveredEntity.p ? (
-                  info(hoveredEntity.p, hoveredEntity.z, true)
-                ) : (
-                  <div className="flex flex-col uppercase mb-2">
-                    {statsinfo()}
+                <form className="pointer-events-auto" onSubmit={handleSubmit}>
+                  <div>
+                    <div className="text-mobiles lg:text-xs">USERNAME</div>
+                    <input
+                      className="font-semibold text-mobile lg:text-sm w-full bg-transparent"
+                      id="username"
+                      type="text"
+                      placeholder="USERNAME"
+                      onChange={handleChange}
+                    />
                   </div>
-                )}
-                <div className="text-mobilexs lg:text-mobile">
-                  Hover/select a point for detailed information.
-                </div>
+                  <div>
+                    <div className="text-mobiles lg:text-xs">PASSWORD</div>
+                    <input
+                      className="font-semibold text-mobile lg:text-sm w-full bg-transparent"
+                      id="password"
+                      type="password"
+                      placeholder="*******"
+                      onChange={handleChange}
+                      autoComplete="off"
+                    />
+                  </div>
+                  <button
+                    className="font-semibold text-mobiles lg:text-sm leading-none text-center"
+                    type="submit"
+                  >
+                    SIGN IN
+                  </button>
+                  <div className="text-mobilexs lg:text-mobile">
+                    {careData.loginInfo}
+                  </div>
+                </form>
               </div>
             )}
           </div>
