@@ -82,7 +82,10 @@ export async function getCareStats(f = false) {
               id: r.id,
               name: r.name,
               address: r.address,
-              district: r.district_object.name,
+              district:
+                r.district_object.name === "Kasargode"
+                  ? "Kasaragod"
+                  : r.district_object.name,
               phoneNo: r.phone_number,
               type: r.facility_type,
               icu_current: _icu ? _icu.current_capacity : 0,
