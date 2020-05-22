@@ -22,7 +22,7 @@ export async function getKeralaStats() {
 export async function careLogin(data) {
   try {
     let res = await axios.post(
-      "https://careapi.coronasafe.in/api/v1/auth/login/",
+      "https://careapi.coronasafe.network/api/v1/auth/login/",
       data
     );
     localStorage.setItem("care_access_token", res.data.access);
@@ -39,7 +39,7 @@ export async function careRefreshToken() {
   try {
     const refresh = localStorage.getItem("care_refresh_token");
     let res = await axios.post(
-      "https://careapi.coronasafe.in/api/v1/auth/token/refresh/",
+      "https://careapi.coronasafe.network/api/v1/auth/token/refresh/",
       {
         refresh,
       }
@@ -60,7 +60,7 @@ export async function getCareStats(f = false) {
     let hospitals = {};
     if (token) {
       let res = await axios.get(
-        "https://careapi.coronasafe.in/api/v1/facility_summary/",
+        "https://careapi.coronasafe.network/api/v1/facility_summary/",
         {
           headers: {
             Authorization: "Bearer " + token,
