@@ -59,6 +59,8 @@ export async function getCareStats(f = false) {
     let token = localStorage.getItem("care_access_token");
     if (f && token && !(await careRefreshToken())) {
       token = "";
+      localStorage.removeItem("care_access_token");
+      localStorage.removeItem("care_refresh_token");
     }
     let hospitals = {};
     if (token) {
