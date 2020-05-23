@@ -5,7 +5,9 @@
   "dependencies": {
     "@urbica/react-map-gl": "^1.13.1",
     "axios": "^0.19.2",
+    "geobuf": "^3.0.1",
     "mapbox-gl": "^1.10.1",
+    "pbf": "^3.2.1",
     "raviger": "^1.4.3",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -13,7 +15,8 @@
   },
   "scripts": {
     "build": "poi --prod",
-    "dev": "poi --serve"
+    "dev": "poi --serve",
+    "start": "serve -s dist"
   },
   "browserslist": {
     "production": [

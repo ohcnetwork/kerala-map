@@ -5,12 +5,10 @@ import MapGL, {
   Source,
 } from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
-import districtGeoData from "../assets/data/kerala_district.json";
-import lsgdGeoData from "../assets/data/kerala_lsgd.json";
 import { MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
 import Card from "./Card";
 
-export default function MapBox({ dark, stats, zones, care, setCare }) {
+export default function MapBox({ dark, stats, zones, care, setCare, geoJSONs }) {
   const mapRef = useRef(null);
   const [mode, setMode] = useState(MODE_DEFAULT);
   const [clicked, setClicked] = useState(false);
@@ -72,6 +70,7 @@ export default function MapBox({ dark, stats, zones, care, setCare }) {
       home_obs: home_obs,
       hospital_today: hospital_today,
     });
+    
   }, []);
 
   const hotspotActive = (event) => {
@@ -337,8 +336,8 @@ export default function MapBox({ dark, stats, zones, care, setCare }) {
           {...viewport}
           ref={mapRef}
         >
-          <Source id="district" type="geojson" data={districtGeoData} />
-          <Source id="lsgd" type="geojson" data={lsgdGeoData} />
+          <Source id="district" type="geojson" data={geoJSONs.district} />
+          <Source id="lsgd" type="geojson" data={geoJSONs.lsgd} />
           {care.hospitals.features && (
             <Source id="care" type="geojson" data={care.hospitals} />
           )}
