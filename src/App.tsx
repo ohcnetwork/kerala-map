@@ -48,7 +48,7 @@ function App() {
             districts,
             lastUpdated,
           } = await getKeralaStats();
-          let hospitals = await getCareStats(true);
+          let { hospitals } = await getCareStats(true);
           let { lsgd, district } = await getGeoJSONs();
           setGeoJSONs({ lsgd: lsgd, district: district });
           setCare({ hospitals: hospitals });

@@ -1,6 +1,7 @@
 import axios from "axios";
 import geobuf from "geobuf";
 import Pbf from "pbf";
+import { Circle } from "terraformer";
 
 export async function getKeralaStats() {
   try {
@@ -79,10 +80,12 @@ export async function getCareStats(f = false) {
         if (r.location && (_icu || _ven)) {
           a.push({
             type: "Feature",
-            geometry: {
-              type: "Point",
-              coordinates: [r.location.longitude, r.location.latitude],
-            },
+            ...new Circle(
+              [r.location.longitude, r.location.latitude],
+              500, //The radius of the circle in meters.
+              5 //How many steps will be used to create the polygon that represents the circle. i.e number of poins in the polyon array
+            ),
+            point: [r.location.longitude, r.location.latitude],
             properties: {
               id: r.id,
               name: r.name,

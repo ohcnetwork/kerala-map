@@ -8,7 +8,14 @@ import React, { useEffect, useRef, useState } from "react";
 import { MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
 import Card from "./Card";
 
-export default function MapBox({ dark, stats, zones, care, setCare, geoJSONs }) {
+export default function MapBox({
+  dark,
+  stats,
+  zones,
+  care,
+  setCare,
+  geoJSONs,
+}) {
   const mapRef = useRef(null);
   const [mode, setMode] = useState(MODE_DEFAULT);
   const [clicked, setClicked] = useState(false);
@@ -70,7 +77,6 @@ export default function MapBox({ dark, stats, zones, care, setCare, geoJSONs }) 
       home_obs: home_obs,
       hospital_today: hospital_today,
     });
-    
   }, []);
 
   const hotspotActive = (event) => {
@@ -475,16 +481,11 @@ export default function MapBox({ dark, stats, zones, care, setCare, geoJSONs }) 
               {GenLL("district")}
               <Layer
                 id="points"
-                type="circle"
+                type="fill-extrusion"
                 source={"care"}
                 paint={{
-                  "circle-radius": [
-                    "case",
-                    ["==", ["get", "id"], hoveredEntity && hoveredEntity.id],
-                    10,
-                    6,
-                  ],
-                  "circle-color": [
+                  "fill-extrusion-height": 10000,
+                  "fill-extrusion-color": [
                     "interpolate",
                     ["linear"],
                     [
@@ -509,9 +510,7 @@ export default function MapBox({ dark, stats, zones, care, setCare, geoJSONs }) 
                     1,
                     "red",
                   ],
-                  "circle-stroke-color": dark ? "white" : "black",
-                  "circle-stroke-width": 1,
-                  "circle-stroke-opacity": 0.5,
+                  "fill-extrusion-opacity": 0.8,
                 }}
                 onHover={onHover}
                 onLeave={onLeave}
@@ -532,19 +531,12 @@ export default function MapBox({ dark, stats, zones, care, setCare, geoJSONs }) 
               {GenLL("district")}
               <Layer
                 id="hospitals"
-                type="circle"
+                type="fill-extrusion"
                 source={"care"}
                 paint={{
-                  "circle-radius": [
-                    "case",
-                    ["==", ["get", "id"], hoveredEntity && hoveredEntity.id],
-                    10,
-                    6,
-                  ],
-                  "circle-color": "white",
-                  "circle-stroke-color": dark ? "white" : "black",
-                  "circle-stroke-width": 1,
-                  "circle-stroke-opacity": 0.5,
+                  "fill-extrusion-height": 10000,
+                  "fill-extrusion-color": "cyan",
+                  "fill-extrusion-opacity": 0.8,
                 }}
                 onHover={onHover}
                 onLeave={onLeave}
