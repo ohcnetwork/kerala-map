@@ -191,6 +191,7 @@ export default function Card({
     if (m >= 10 && !localStorage.getItem("care_access_token")) {
       setCareData({ ...careData, showLogin: true, mode: m });
     } else {
+      careData.showLogin && setCareData(initCareData);
       setMode(m);
     }
   };
