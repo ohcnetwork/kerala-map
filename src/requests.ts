@@ -1,4 +1,6 @@
 import axios from "axios";
+import geobuf from "geobuf";
+import Pbf from "pbf";
 
 export async function getKeralaStats() {
   try {
@@ -104,6 +106,22 @@ export async function getCareStats(f = false) {
       };
     }
     return { hospitals };
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function getGeoJSONs() {
+  try {
+    let res = await axios.get("/kerala_lsgd.pbf", {
+      responseType: "arraybuffer",
+    });
+    const lsgd = geobuf.decode(new Pbf(res.data));
+    res = await axios.get("/kerala_district.pbf", {
+      responseType: "arraybuffer",
+    });
+    const district = geobuf.decode(new Pbf(res.data));
+    return { lsgd, district };
   } catch (error) {
     throw error;
   }
