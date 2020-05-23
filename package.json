@@ -15,7 +15,8 @@
   },
   "scripts": {
     "build": "poi --prod",
-    "dev": "poi --serve"
+    "dev": "poi --serve",
+    "start": "serve -s dist"
   },
   "browserslist": {
     "production": [
