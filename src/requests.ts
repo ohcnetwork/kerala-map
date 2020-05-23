@@ -46,16 +46,17 @@ export async function careRefreshToken() {
     );
     localStorage.setItem("care_access_token", res.data.access);
     localStorage.setItem("care_refresh_token", res.data.refresh);
+    return true;
   } catch (error) {
-    throw error;
+    return false;
   }
 }
 
 export async function getCareStats(f = false) {
   try {
-    const token = localStorage.getItem("care_access_token");
-    if (f && token) {
-      await careRefreshToken();
+    let token = localStorage.getItem("care_access_token");
+    if (f && token && !(await careRefreshToken())) {
+      token = "";
     }
     let hospitals = {};
     if (token) {
