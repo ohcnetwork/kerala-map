@@ -124,6 +124,18 @@ export default function Card({
               </div>
             </div>
           )}
+          {p.LSGD && z === "CONTAINMENT" && (
+            <div>
+              <div className="text-mobiles lg:text-xs">WARDS</div>
+              <div className="font-semibold text-mobile lg:text-sm">
+                {
+                  zones.hotspots.find(
+                    (e) => e.lsgd === p.LSGD && e.district === p.DISTRICT
+                  ).wards
+                }
+              </div>
+            </div>
+          )}
           <div>
             <div className="text-mobiles lg:text-xs">DISTRICT</div>
             <div className="font-semibold text-mobile lg:text-sm">

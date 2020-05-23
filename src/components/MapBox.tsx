@@ -36,6 +36,7 @@ export default function MapBox({
     home_obs: 0,
     hospital_today: 0,
   });
+  const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
 
   useEffect(() => {
     if (geolocatedLoc == null) {
@@ -176,7 +177,7 @@ export default function MapBox({
         return;
       }
       let z =
-        f.properties.LSGD && zones.hotspots.includes(f.properties.LSGD)
+        f.properties.LSGD && lsgdHotspots.includes(f.properties.LSGD)
           ? "CONTAINMENT"
           : zones.districts[f.properties.DISTRICT].toUpperCase();
       setGeolocatedLoc({
@@ -370,7 +371,7 @@ export default function MapBox({
               />
               <Filter
                 layerId="lsgd-hot"
-                filter={["in", "LSGD", ...zones.hotspots]}
+                filter={["in", "LSGD", ...lsgdHotspots]}
               />
               {Object.keys(zones.districts).map((key, i) => {
                 return (
@@ -396,7 +397,7 @@ export default function MapBox({
                       layerId={`lsgd-not-hot-${key}`}
                       filter={[
                         "all",
-                        ["!in", "LSGD", ...zones.hotspots],
+                        ["!in", "LSGD", ...lsgdHotspots],
                         ["==", "DISTRICT", key],
                       ]}
                     />
