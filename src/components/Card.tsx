@@ -212,9 +212,9 @@ export default function Card({
     return l.map((a, i) => (
       <div
         key={i}
-        className={`text-mobilexs lg:text-xs pointer-events-auto cursor-pointer bg-opacity-50 font-semibold leading-none p-sm ${
-          dark ? "bg-black" : "bg-white"
-        }`}
+        className={`text-mobilexs lg:text-xs pointer-events-auto cursor-pointer bg-opacity-50 font-semibold leading-none p-sm border ${
+          dark ? "bg-black border-white" : "bg-white border-black"
+        } ${mode !== MODE[a] ? "border-opacity-0": "border-opacity-100"}`}
         onClick={() => changeMode(MODE[a])}
         onMouseEnter={() =>
           setControlTip(MODE_LANG.find((j) => j[0] === MODE[a])[1].toString())
