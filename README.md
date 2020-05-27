@@ -1,6 +1,6 @@
-# Kerala Hotspot Maps
+# Kerala COVID-19 Map
 
-Interactive 3D map to monitor live updates of hotspots in Kerala using data from DHS Daily Bulletin.
+Interactive 3D map COVID-19 data visualization app for Kerala.
 
 ## Uses
 API Repo : [Kerala Stats](https://github.com/coronasafe/kerala_stats).
