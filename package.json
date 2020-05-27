@@ -1,5 +1,5 @@
 {
-  "name": "hotspots-dashboard",
+  "name": "keralamap-covid19",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
