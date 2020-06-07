@@ -36,6 +36,7 @@ export default function MapBox({
     home_obs: 0,
     hospital_today: 0,
   });
+  const [showHotspot2D, setShowHotspot2D] = useState(false);
   const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
 
   useEffect(() => {
@@ -203,6 +204,7 @@ export default function MapBox({
       <div>
         <Layer
           id={`${s}-line`}
+          before={s == "district" ? "lsgd-label" : "district-label"}
           type="line"
           source={s}
           paint={{
@@ -224,7 +226,7 @@ export default function MapBox({
             }}
             layout={{
               "text-field": ["get", s.toUpperCase()],
-              "text-size": 10,
+              "text-size": s == "district" ? 12 : 10,
               "text-variable-anchor": ["center"],
               "text-justify": "auto",
             }}
@@ -312,8 +314,51 @@ export default function MapBox({
     return k * STATS.HEIGHT_MULTIPLIER;
   };
 
+  const hotspot2d = () => (
+    <div>
+      <Layer
+        id="lsgd-hot-facility"
+        before="lsgd-line"
+        type="fill"
+        source="lsgd"
+        paint={{
+          "fill-color": ZONE.COLOR.CONTAINMENT,
+          "fill-opacity": 0.8,
+        }}
+      />
+      <Filter
+        layerId="lsgd-hot-facility"
+        filter={["in", "LSGD", ...lsgdHotspots]}
+      />
+      {Object.keys(zones.districts).map((key, i) => {
+        return (
+          <div key={i}>
+            <Layer
+              id={`lsgd-not-hot-${key}-facility`}
+              before="lsgd-line"
+              type="fill"
+              source="lsgd"
+              paint={{
+                "fill-color": ZONE.COLOR[zones.districts[key].toUpperCase()],
+                "fill-opacity": 0.8,
+              }}
+            />
+            <Filter
+              layerId={`lsgd-not-hot-${key}-facility`}
+              filter={[
+                "all",
+                ["!in", "LSGD", ...lsgdHotspots],
+                ["==", "DISTRICT", key],
+              ]}
+            />
+          </div>
+        );
+      })}
+    </div>
+  );
+
   return (
-    <div className="flex flex-col lg:flex-row min-h-full min-w-full">
+    <div className="flex flex-col min-w-full min-h-full lg:flex-row">
       <Card
         mode={mode}
         setMode={setMode}
@@ -325,6 +370,8 @@ export default function MapBox({
         geolocatedLoc={geolocatedLoc}
         setGeolocatedLoc={setGeolocatedLoc}
         setCare={setCare}
+        showHotspot2D={showHotspot2D}
+        setShowHotspot2D={setShowHotspot2D}
       />
       <div
         className="flex flex-grow w-full lg:w-5/6"
@@ -405,8 +452,8 @@ export default function MapBox({
                 );
               })}
               <div>
-                {GenLL("district", false)}
                 {GenLL("lsgd")}
+                {GenLL("district")}
               </div>
             </div>
           )}
@@ -479,6 +526,8 @@ export default function MapBox({
           )}
           {(mode === MODE.CARE_VENTILATOR || mode === MODE.CARE_ICU) && (
             <div>
+              {showHotspot2D && hotspot2d()}
+              {GenLL("lsgd")}
               {GenLL("district")}
               <Layer
                 id="points"
@@ -529,6 +578,8 @@ export default function MapBox({
           )}
           {mode === MODE.CARE_HOSPITALS && (
             <div>
+              {showHotspot2D && hotspot2d()}
+              {GenLL("lsgd")}
               {GenLL("district")}
               <Layer
                 id="hospitals"

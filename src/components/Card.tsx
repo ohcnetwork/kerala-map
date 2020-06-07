@@ -22,6 +22,8 @@ export default function Card({
   geolocatedLoc,
   setGeolocatedLoc,
   setCare,
+  showHotspot2D,
+  setShowHotspot2D,
 }) {
   const lens = {
     CONTAINMENT: zones.hotspots.length,
@@ -114,7 +116,7 @@ export default function Card({
 
   const info = (p, z, f) => {
     return (
-      <div className="flex flex-col uppercase mb-2">
+      <div className="flex flex-col mb-2 uppercase">
         <div className="mb-2">
           {p.LSGD && (
             <div>
@@ -178,7 +180,7 @@ export default function Card({
       0
     );
     return (
-      <div className="flex flex-col uppercase mb-2">
+      <div className="flex flex-col mb-2 uppercase">
         <div>
           <div className="text-mobiles lg:text-xs">NO OF HOSPITALS</div>
           <div className="font-semibold text-mobile lg:text-sm">{hos}</div>
@@ -214,7 +216,7 @@ export default function Card({
         key={i}
         className={`text-mobilexs lg:text-xs pointer-events-auto cursor-pointer bg-opacity-50 font-semibold leading-none p-sm border ${
           dark ? "bg-black border-white" : "bg-white border-black"
-        } ${mode !== MODE[a] ? "border-opacity-0": "border-opacity-100"}`}
+        } ${mode !== MODE[a] ? "border-opacity-0" : "border-opacity-100"}`}
         onClick={() => changeMode(MODE[a])}
         onMouseEnter={() =>
           setControlTip(MODE_LANG.find((j) => j[0] === MODE[a])[1].toString())
@@ -229,7 +231,7 @@ export default function Card({
   const control = () => {
     return (
       <div className="flex flex-col">
-        <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 text-center mb-1 font-semibold text-mobiles lg:text-sm leading-none text-center">
+        <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
           {["STATS", "ZONES", "CARE"].map((a, i) => (
             <div
               key={i}
@@ -248,7 +250,7 @@ export default function Card({
             </div>
           ))}
         </div>
-        <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 grid-cols-none grid-rows-4 text-center mb-1 font-semibold text-mobiles lg:text-sm leading-none text-center">
+        <div className="grid grid-flow-row-dense grid-flow-col-dense grid-cols-none grid-rows-4 gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
           {modeCard === "STATS" &&
             subControl([
               "STATS_ACTIVE",
@@ -295,7 +297,7 @@ export default function Card({
   };
 
   return (
-    <div className="absolute flex flex-col flex-grow order-last lg:order-first z-40 m-2 z-40 select-none pointer-events-none w-24 lg:w-48">
+    <div className="absolute z-40 flex flex-col flex-grow order-last w-24 m-2 pointer-events-none select-none lg:order-first lg:w-48">
       <div
         className={`max-w-full relative ${dark ? "text-white" : "text-black"}`}
       >
@@ -331,7 +333,7 @@ export default function Card({
                             </div>
                           </div>
                         ) : (
-                          <div className="flex flex-col uppercase mb-2">
+                          <div className="flex flex-col mb-2 uppercase">
                             {Object.entries(lens).map((a, i) => (
                               <div key={i}>
                                 <div
@@ -352,7 +354,7 @@ export default function Card({
                     ) : (
                       <div className="flex flex-col">
                         <div className="flex flex-col mb-2">
-                          <div className="uppercase font-semibold">
+                          <div className="font-semibold uppercase">
                             You are in
                           </div>
                           <div
@@ -363,7 +365,7 @@ export default function Card({
                             {`${geolocatedLoc.z} ZONE`}
                           </div>
                           {/* <Link
-                        className="flex uppercase text-mobiles mt-0 pointer-events-auto"
+                        className="flex mt-0 uppercase pointer-events-auto text-mobiles"
                         href={"/info#zone-" + geolocatedLoc.z.toLowerCase()}
                       >
                         Click here for more info
@@ -371,7 +373,7 @@ export default function Card({
                         </div>
                         {info(geolocatedLoc.p, geolocatedLoc.z, false)}
                         <div
-                          className="uppercase text-mobilexs lg:text-mobiles pointer-events-auto cursor-pointer"
+                          className="uppercase cursor-pointer pointer-events-auto text-mobilexs lg:text-mobiles"
                           onClick={() => setGeolocatedLoc(null)}
                         >
                           CLICK TO RETURN
@@ -385,14 +387,26 @@ export default function Card({
                   mode === MODE.CARE_HOSPITALS) && (
                   <div className="flex flex-col">
                     {header()}
-                    <div
-                      className="text-mobiles lg:text-mobilel absolute top-0 right-0 p-2 pointer-events-auto cursor-pointer"
-                      onClick={logout}
-                    >
-                      LOGOUT
+                    <div className="absolute top-0 right-0 p-2 text-right text-mobiles lg:text-mobilel">
+                      <div
+                        className="cursor-pointer pointer-events-auto"
+                        onClick={logout}
+                      >
+                        LOGOUT
+                      </div>
+                      <div
+                        className={`cursor-pointer pointer-events-auto ${
+                          showHotspot2D ? "text-green-500" : "text-red-500"
+                        }`}
+                        onClick={() => {
+                          setShowHotspot2D(!showHotspot2D);
+                        }}
+                      >
+                        HOTSPOTS
+                      </div>
                     </div>
                     {hoveredEntity && hoveredEntity.name ? (
-                      <div className="flex flex-col uppercase mb-2">
+                      <div className="flex flex-col mb-2 uppercase">
                         <div>
                           <div className="text-mobiles lg:text-xs">NAME</div>
                           <div className="font-semibold text-mobile lg:text-sm">
@@ -441,7 +455,7 @@ export default function Card({
                             </div>
                           </div>
                         )}
-                        <div className="text-mobiles lg:text-xs mt-2">
+                        <div className="mt-2 text-mobiles lg:text-xs">
                           DISTRICT STATS
                         </div>
                         {distStats(hoveredEntity.district)}
@@ -460,7 +474,7 @@ export default function Card({
                     {hoveredEntity && hoveredEntity.p ? (
                       info(hoveredEntity.p, hoveredEntity.z, true)
                     ) : (
-                      <div className="flex flex-col uppercase mb-2">
+                      <div className="flex flex-col mb-2 uppercase">
                         {statsinfo()}
                       </div>
                     )}
@@ -482,7 +496,7 @@ export default function Card({
                   <div>
                     <div className="text-mobiles lg:text-xs">USERNAME</div>
                     <input
-                      className="font-semibold text-mobile lg:text-sm w-full bg-transparent"
+                      className="w-full font-semibold bg-transparent text-mobile lg:text-sm"
                       id="username"
                       type="text"
                       placeholder="USERNAME"
@@ -492,7 +506,7 @@ export default function Card({
                   <div>
                     <div className="text-mobiles lg:text-xs">PASSWORD</div>
                     <input
-                      className="font-semibold text-mobile lg:text-sm w-full bg-transparent"
+                      className="w-full font-semibold bg-transparent text-mobile lg:text-sm"
                       id="password"
                       type="password"
                       placeholder="*******"
@@ -501,7 +515,7 @@ export default function Card({
                     />
                   </div>
                   <button
-                    className="font-semibold text-mobiles lg:text-sm leading-none text-center"
+                    className="font-semibold leading-none text-center text-mobiles lg:text-sm"
                     type="submit"
                   >
                     SIGN IN
