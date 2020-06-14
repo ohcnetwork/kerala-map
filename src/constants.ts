@@ -145,3 +145,20 @@ export const CARE_KEY = [
 ];
 
 export const MODE_DEFAULT = MODE.HOTSPOTS_LSGD;
+
+export const DISTRICTS = [
+  "Thiruvananthapuram",
+  "Kollam",
+  "Pathanamthitta",
+  "Alappuzha",
+  "Kottayam",
+  "Idukki",
+  "Ernakulam",
+  "Thrissur",
+  "Palakkad",
+  "Malappuram",
+  "Kozhikode",
+  "Wayanad",
+  "Kannur",
+  "Kasaragod",
+];

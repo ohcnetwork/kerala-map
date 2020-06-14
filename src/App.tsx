@@ -4,7 +4,7 @@ import { Activity, ChevronDown, Info, Map, Moon, Sun } from "react-feather";
 import { hot } from "react-hot-loader";
 import Zones from "./components/Info";
 import MapBox from "./components/MapBox";
-import { getCareStats, getKeralaStats, getGeoJSONs } from "./requests";
+import { getCareStats, getGeoJSONs, getKeralaStats } from "./requests";
 
 const routes = {
   "/": ({ dark, stats, zones, care, setCare, geoJSONs }: any) => (
@@ -77,12 +77,12 @@ function App() {
           dark ? "text-white" : "text-black"
         }`}
       >
-        <div className="leading-none font-extrabold tracking-wider text-xl lg:text-3xl text-right select-none">
+        <div className="text-xl font-extrabold leading-none tracking-wider text-right select-none lg:text-3xl">
           KERALA
         </div>
-        <div className="flex flex-row text-mobiles lg:text-mobile select-none object-center items-end">
+        <div className="flex flex-row items-end object-center select-none text-mobiles lg:text-mobile">
           <p className="flex leading-none">Part of</p>
-          <a className="flex w-12 lg: ml-1" href="https://coronasafe.network/">
+          <a className="flex w-12 ml-1 lg:" href="https://coronasafe.network/">
             <img
               src={require("./assets/img/coronaSafeLogo.svg")}
               title="CoronaSafe: Corona Literacy Mission"
@@ -90,8 +90,8 @@ function App() {
             />
           </a>
         </div>
-        <div className="group flex text-mobiles">
-          <div className="flex items-end flex-col lg:w-full transform scale-0 group-hover:scale-100 transition duration-150 ease-in-out origin-right space-y-1 mt-1">
+        <div className="flex group text-mobiles">
+          <div className="flex flex-col items-end mt-1 space-y-1 transition duration-150 ease-in-out origin-right transform scale-0 lg:w-full group-hover:scale-100">
             <Link href="/">
               <div className="flex flex-row items-center cursor-pointer">
                 Map
@@ -131,7 +131,7 @@ function App() {
           </div>
           <ChevronDown
             size={"0.8rem"}
-            className="transform group-hover:scale-0 transition duration-150 ease-in-out cursor-pointer absolute right-0"
+            className="absolute right-0 transition duration-150 ease-in-out transform cursor-pointer group-hover:scale-0"
           />
         </div>
       </div>

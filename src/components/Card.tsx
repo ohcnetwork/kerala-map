@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { Plus } from "react-feather";
 import {
+  CARE_KEY,
+  DISTRICTS,
   MODE,
   MODE_BUTTON,
   MODE_DEFAULT,
@@ -8,7 +10,6 @@ import {
   MODE_SUBHEADER_LANG,
   STATS,
   ZONE,
-  CARE_KEY,
 } from "../constants";
 import { careLogin, getCareStats } from "../requests";
 
@@ -25,6 +26,8 @@ export default function Card({
   setCare,
   showHotspot2D,
   setShowHotspot2D,
+  filter,
+  setFilter,
 }) {
   const lens = {
     CONTAINMENT: zones.hotspots.length,
@@ -33,6 +36,7 @@ export default function Card({
     GREEN: Object.values(zones.districts).filter((x) => x == "green").length,
   };
   const [cardEnabled, setCardEnabled] = useState(true);
+  const [filterCardEnabled, setfilterCardEnabled] = useState(false);
   const [modeCard, setModeCard] = useState("");
   const [controlTip, setControlTip] = useState("");
   const initCareData = {
@@ -163,12 +167,29 @@ export default function Card({
 
   const hosinfo = () => {
     let data = care.hospitals;
-    let hos = data.features.length;
+    let hos = data.features.filter(({ properties }) => {
+      if (
+        [
+          MODE.CARE_VENTILATOR,
+          MODE.CARE_ICU,
+          MODE.CARE_BED,
+          MODE.CARE_ROOM,
+        ].includes(mode)
+      ) {
+        return (
+          properties[CARE_KEY.find((j) => j[0] === mode)[1] + "_total"] !== 0
+        );
+      }
+      return true;
+    }).length;
+
     return (
       <div className="flex flex-col mb-2 uppercase">
         <div>
           <div className="text-mobiles lg:text-xs">NO OF HOSPITALS</div>
-          <div className="font-semibold text-mobile lg:text-sm">{hos}</div>
+          <div className="font-semibold text-mobile lg:text-sm">
+            {hos}/{care.hospitals.features.length}
+          </div>
         </div>
         {CARE_KEY.map((e, i) => (
           <div key={i}>
@@ -221,59 +242,61 @@ export default function Card({
 
   const control = () => {
     return (
-      <div className="flex flex-col">
-        <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
-          {["STATS", "ZONES", "CARE"].map((a, i) => (
+      cardEnabled && (
+        <div className="flex flex-col">
+          <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
+            {["STATS", "ZONES", "CARE"].map((a, i) => (
+              <div
+                key={i}
+                className={`pointer-events-auto cursor-pointer bg-opacity-50 p-sm ${
+                  dark ? "bg-black" : "bg-white"
+                }`}
+                onClick={() =>
+                  modeCard
+                    ? modeCard === a
+                      ? setModeCard("")
+                      : setModeCard(a)
+                    : setModeCard(a)
+                }
+              >
+                {a}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-flow-row-dense grid-flow-col-dense grid-cols-none grid-rows-4 gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
+            {modeCard === "STATS" &&
+              subControl([
+                "STATS_ACTIVE",
+                "STATS_DEATH",
+                "STATS_RECOVERED",
+                "STATS_CONFIRMED",
+                "STATS_TOTAL_OBS",
+                "STATS_HOSOBS",
+                "STATS_HOME_OBS",
+                "STATS_HOSTODAY",
+              ])}
+            {modeCard === "ZONES" &&
+              subControl(["HOTSPOTS_LSGD", "HOTSPOTS_DISTRICT"])}
+            {modeCard === "CARE" &&
+              subControl([
+                "CARE_ICU",
+                "CARE_VENTILATOR",
+                "CARE_BED",
+                "CARE_ROOM",
+                "CARE_HOSPITALS",
+              ])}
+          </div>
+          {controlTip && (
             <div
-              key={i}
-              className={`pointer-events-auto cursor-pointer bg-opacity-50 p-sm ${
+              className={`flex text-mobilexs lg:text-mobile p-sm bg-opacity-50 self-start ${
                 dark ? "bg-black" : "bg-white"
               }`}
-              onClick={() =>
-                modeCard
-                  ? modeCard === a
-                    ? setModeCard("")
-                    : setModeCard(a)
-                  : setModeCard(a)
-              }
             >
-              {a}
+              {controlTip}
             </div>
-          ))}
+          )}
         </div>
-        <div className="grid grid-flow-row-dense grid-flow-col-dense grid-cols-none grid-rows-4 gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
-          {modeCard === "STATS" &&
-            subControl([
-              "STATS_ACTIVE",
-              "STATS_DEATH",
-              "STATS_RECOVERED",
-              "STATS_CONFIRMED",
-              "STATS_TOTAL_OBS",
-              "STATS_HOSOBS",
-              "STATS_HOME_OBS",
-              "STATS_HOSTODAY",
-            ])}
-          {modeCard === "ZONES" &&
-            subControl(["HOTSPOTS_LSGD", "HOTSPOTS_DISTRICT"])}
-          {modeCard === "CARE" &&
-            subControl([
-              "CARE_ICU",
-              "CARE_VENTILATOR",
-              "CARE_BED",
-              "CARE_ROOM",
-              "CARE_HOSPITALS",
-            ])}
-        </div>
-        {controlTip && (
-          <div
-            className={`flex text-mobilexs lg:text-mobile p-sm bg-opacity-50 self-start ${
-              dark ? "bg-black" : "bg-white"
-            }`}
-          >
-            {controlTip}
-          </div>
-        )}
-      </div>
+      )
     );
   };
 
@@ -293,234 +316,318 @@ export default function Card({
     );
   };
 
-  return (
-    <div className="absolute z-40 flex flex-col flex-grow order-last w-24 m-2 pointer-events-none select-none lg:order-first lg:w-48">
+  const filterCard = () => {
+    return (
       <div
-        className={`max-w-full relative ${dark ? "text-white" : "text-black"}`}
+        className={`flex flex-col text-mobilexs order-last lg:text-mobilel p-2 bg-opacity-50 my-2 h-full w-full ${
+          dark ? "bg-black text-white" : "bg-white text-black"
+        } `}
       >
-        <Plus
-          className={
-            "absolute top-0 left-0 z-50 cursor-pointer pointer-events-auto text-white transition duration-150 ease-in-out transform -translate-y-1 -translate-x-1 hover:scale-150 " +
-            ((cardEnabled || geolocatedLoc) && "rotate-45")
-          }
-          size={"0.5rem"}
-          onClick={() => {
-            setCardEnabled(!cardEnabled);
-          }}
-        />
-        {(cardEnabled || geolocatedLoc || careData.showLogin) && (
-          <div
-            className={`flex flex-col text-mobile lg:text-sm p-2 bg-opacity-50 mb-1 ${
-              dark ? "bg-black" : "bg-white"
-            } `}
-          >
-            {!careData.showLogin ? (
-              <div>
-                {(mode === MODE.HOTSPOTS_DISTRICT ||
-                  mode === MODE.HOTSPOTS_LSGD) && (
-                  <div className="flex flex-col">
-                    {header()}
-                    {!geolocatedLoc ? (
-                      <div className="flex flex-col">
-                        {hoveredEntity && hoveredEntity.p ? (
-                          <div>
-                            {info(hoveredEntity.p, hoveredEntity.z, true)}
-                            <div className="text-mobilexs lg:text-mobile">
-                              Hover/select an area for detailed information.
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex flex-col mb-2 uppercase">
-                            {Object.entries(lens).map((a, i) => (
-                              <div key={i}>
-                                <div
-                                  className={`text-mobiles lg:text-xs ${
-                                    ZONE.COLOR_TEXT[a[0]]
-                                  }`}
-                                >{`${
-                                  a[0] == "CONTAINMENT" ? "LSGD" : "DISTRICTS"
-                                } IN ${a[0]}`}</div>
-                                <div className="font-semibold text-mobile lg:text-sm">
-                                  {a[1]}
-                                </div>
+        <div className="flex flex-col w-full">
+          <div className="mb-1 font-bold">FILTER BY DISTRICTS</div>
+          {DISTRICTS.map((d) => {
+            return (
+              <div className="flex flex-row items-center">
+                <div
+                  className={`${
+                    filter.includes(d) ? "bg-green-500 " : "bg-white "
+                  } flex w-1 h-1 lg:h-2 lg:w-2 my-1 mr-1  cursor-pointer
+                `}
+                  onClick={() => {
+                    if (filter.includes(d)) {
+                      setFilter(filter.filter((i) => i != d));
+                    } else {
+                      setFilter(filter.concat([d]));
+                    }
+                  }}
+                ></div>
+                <div className="leading-none">{d}</div>
+              </div>
+            );
+          })}
+          <div className="mt-1">
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                setFilter(DISTRICTS);
+              }}
+            >
+              SELECT ALL
+            </div>
+            <div
+              className="cursor-pointer"
+              onClick={() => {
+                setFilter([]);
+              }}
+            >
+              SELECT NONE
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="absolute z-40 flex flex-row w-40 lg:w-64">
+      {[
+        MODE.CARE_VENTILATOR,
+        MODE.CARE_ICU,
+        MODE.CARE_BED,
+        MODE.CARE_ROOM,
+        MODE.CARE_HOSPITALS,
+      ].includes(mode) &&
+        cardEnabled &&
+        filterCardEnabled &&
+        filterCard()}
+      <div className="flex flex-col flex-grow w-full m-2 pointer-events-none select-none">
+        <div
+          className={`w-24 lg:w-48 relative ${
+            dark ? "text-white" : "text-black"
+          }`}
+        >
+          <Plus
+            className={
+              "absolute top-0 left-0 z-50 cursor-pointer pointer-events-auto text-white transition duration-150 ease-in-out transform -translate-y-1 -translate-x-1 hover:scale-150 " +
+              ((cardEnabled || geolocatedLoc) && "rotate-45")
+            }
+            size={"0.5rem"}
+            onClick={() => {
+              setCardEnabled(!cardEnabled);
+            }}
+          />
+          {(cardEnabled || geolocatedLoc || careData.showLogin) && (
+            <div
+              className={`flex flex-col text-mobile lg:text-sm p-2 bg-opacity-50 mb-1 ${
+                dark ? "bg-black" : "bg-white"
+              } `}
+            >
+              {!careData.showLogin ? (
+                <div>
+                  {[MODE.HOTSPOTS_DISTRICT, MODE.HOTSPOTS_LSGD].includes(
+                    mode
+                  ) && (
+                    <div className="flex flex-col">
+                      {header()}
+                      {!geolocatedLoc ? (
+                        <div className="flex flex-col">
+                          {hoveredEntity && hoveredEntity.p ? (
+                            <div>
+                              {info(hoveredEntity.p, hoveredEntity.z, true)}
+                              <div className="text-mobilexs lg:text-mobile">
+                                Hover/select an area for detailed information.
                               </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="flex flex-col">
-                        <div className="flex flex-col mb-2">
-                          <div className="font-semibold uppercase">
-                            You are in
-                          </div>
-                          <div
-                            className={`flex text-mobilel lg:text-base font-semibold ${
-                              ZONE.COLOR_TEXT[geolocatedLoc.z]
-                            }`}
-                          >
-                            {`${geolocatedLoc.z} ZONE`}
-                          </div>
-                          {/* <Link
+                            </div>
+                          ) : (
+                            <div className="flex flex-col mb-2 uppercase">
+                              {Object.entries(lens).map((a, i) => (
+                                <div key={i}>
+                                  <div
+                                    className={`text-mobiles lg:text-xs ${
+                                      ZONE.COLOR_TEXT[a[0]]
+                                    }`}
+                                  >{`${
+                                    a[0] == "CONTAINMENT" ? "LSGD" : "DISTRICTS"
+                                  } IN ${a[0]}`}</div>
+                                  <div className="font-semibold text-mobile lg:text-sm">
+                                    {a[1]}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col">
+                          <div className="flex flex-col mb-2">
+                            <div className="font-semibold uppercase">
+                              You are in
+                            </div>
+                            <div
+                              className={`flex text-mobilel lg:text-base font-semibold ${
+                                ZONE.COLOR_TEXT[geolocatedLoc.z]
+                              }`}
+                            >
+                              {`${geolocatedLoc.z} ZONE`}
+                            </div>
+                            {/* <Link
                         className="flex mt-0 uppercase pointer-events-auto text-mobiles"
                         href={"/info#zone-" + geolocatedLoc.z.toLowerCase()}
                       >
                         Click here for more info
                       </Link> */}
+                          </div>
+                          {info(geolocatedLoc.p, geolocatedLoc.z, false)}
+                          <div
+                            className="uppercase cursor-pointer pointer-events-auto text-mobilexs lg:text-mobiles"
+                            onClick={() => setGeolocatedLoc(null)}
+                          >
+                            CLICK TO RETURN
+                          </div>
                         </div>
-                        {info(geolocatedLoc.p, geolocatedLoc.z, false)}
+                      )}
+                    </div>
+                  )}
+                  {[
+                    MODE.CARE_VENTILATOR,
+                    MODE.CARE_ICU,
+                    MODE.CARE_BED,
+                    MODE.CARE_ROOM,
+                    MODE.CARE_HOSPITALS,
+                  ].includes(mode) && (
+                    <div className="flex flex-col">
+                      {header()}
+                      <div className="absolute top-0 right-0 p-2 text-right text-mobiles lg:text-mobilel">
                         <div
-                          className="uppercase cursor-pointer pointer-events-auto text-mobilexs lg:text-mobiles"
-                          onClick={() => setGeolocatedLoc(null)}
+                          className="cursor-pointer pointer-events-auto"
+                          onClick={logout}
                         >
-                          CLICK TO RETURN
+                          LOGOUT
+                        </div>
+                        <div
+                          className={`cursor-pointer pointer-events-auto ${
+                            showHotspot2D ? "text-green-500" : "text-red-500"
+                          }`}
+                          onClick={() => {
+                            setShowHotspot2D(!showHotspot2D);
+                          }}
+                        >
+                          HOTSPOTS
+                        </div>
+                        <div
+                          className={`cursor-pointer pointer-events-auto ${
+                            filterCardEnabled
+                              ? "text-green-500"
+                              : "text-red-500"
+                          }`}
+                          onClick={() => {
+                            setfilterCardEnabled(!filterCardEnabled);
+                          }}
+                        >
+                          FILTER
                         </div>
                       </div>
-                    )}
-                  </div>
-                )}
-                {(mode === MODE.CARE_ICU ||
-                  mode === MODE.CARE_VENTILATOR ||
-                  mode === MODE.CARE_BED ||
-                  mode === MODE.CARE_ROOM ||
-                  mode === MODE.CARE_HOSPITALS) && (
-                  <div className="flex flex-col">
-                    {header()}
-                    <div className="absolute top-0 right-0 p-2 text-right text-mobiles lg:text-mobilel">
-                      <div
-                        className="cursor-pointer pointer-events-auto"
-                        onClick={logout}
-                      >
-                        LOGOUT
-                      </div>
-                      <div
-                        className={`cursor-pointer pointer-events-auto ${
-                          showHotspot2D ? "text-green-500" : "text-red-500"
-                        }`}
-                        onClick={() => {
-                          setShowHotspot2D(!showHotspot2D);
-                        }}
-                      >
-                        HOTSPOTS
-                      </div>
-                    </div>
-                    {hoveredEntity && hoveredEntity.name ? (
-                      <div className="flex flex-col mb-2 uppercase">
-                        <div>
-                          <div className="text-mobiles lg:text-xs">NAME</div>
-                          <div className="font-semibold text-mobile lg:text-sm">
-                            {hoveredEntity.name}
+                      {hoveredEntity && hoveredEntity.name ? (
+                        <div className="flex flex-col mb-2 uppercase">
+                          <div>
+                            <div className="text-mobiles lg:text-xs">NAME</div>
+                            <div className="font-semibold text-mobile lg:text-sm">
+                              {hoveredEntity.name}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <div className="text-mobiles lg:text-xs">
-                            ADDRESSS
+                          <div>
+                            <div className="text-mobiles lg:text-xs">
+                              ADDRESSS
+                            </div>
+                            <div className="font-semibold text-mobile lg:text-sm">
+                              {hoveredEntity.address}
+                            </div>
                           </div>
-                          <div className="font-semibold text-mobile lg:text-sm">
-                            {hoveredEntity.address}
+                          <div>
+                            <div className="text-mobiles lg:text-xs">
+                              PHONENO
+                            </div>
+                            <div className="font-semibold text-mobile lg:text-sm">
+                              {hoveredEntity.phoneNo}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <div className="text-mobiles lg:text-xs">PHONENO</div>
-                          <div className="font-semibold text-mobile lg:text-sm">
-                            {hoveredEntity.phoneNo}
+                          <div>
+                            <div className="text-mobiles lg:text-xs">TYPE</div>
+                            <div className="font-semibold text-mobile lg:text-sm">
+                              {hoveredEntity.type}
+                            </div>
                           </div>
-                        </div>
-                        <div>
-                          <div className="text-mobiles lg:text-xs">TYPE</div>
-                          <div className="font-semibold text-mobile lg:text-sm">
-                            {hoveredEntity.type}
-                          </div>
-                        </div>
-                        {CARE_KEY.map((e, i) => (
-                          <div key={i}>
-                            {hoveredEntity[e[1] + "_total"] !== 0 && (
-                              <div>
-                                <div className="text-mobiles lg:text-xs">
-                                  {e[1].toString().toUpperCase() + " CAPACITY"}
+                          {CARE_KEY.map((e, i) => (
+                            <div key={i}>
+                              {hoveredEntity[e[1] + "_total"] !== 0 && (
+                                <div>
+                                  <div className="text-mobiles lg:text-xs">
+                                    {e[1].toString().toUpperCase() +
+                                      " CAPACITY"}
+                                  </div>
+                                  <div className="font-semibold text-mobile lg:text-sm">
+                                    {hoveredEntity[e[1] + "_current"]}/
+                                    {hoveredEntity[e[1] + "_total"]}
+                                  </div>
                                 </div>
-                                <div className="font-semibold text-mobile lg:text-sm">
-                                  {hoveredEntity[e[1] + "_current"]}/
-                                  {hoveredEntity[e[1] + "_total"]}
-                                </div>
-                              </div>
-                            )}
+                              )}
+                            </div>
+                          ))}
+                          <div className="mt-2 text-mobiles lg:text-xs">
+                            DISTRICT STATS
                           </div>
-                        ))}
-                        <div className="mt-2 text-mobiles lg:text-xs">
-                          DISTRICT STATS
+                          {distStats(hoveredEntity.district)}
                         </div>
-                        {distStats(hoveredEntity.district)}
+                      ) : (
+                        hosinfo()
+                      )}
+                      <div className="text-mobilexs lg:text-mobile">
+                        Hover/select a point for detailed information.
                       </div>
-                    ) : (
-                      hosinfo()
-                    )}
-                    <div className="text-mobilexs lg:text-mobile">
-                      Hover/select a point for detailed information.
                     </div>
-                  </div>
-                )}
-                {mode <= MODE.STATS_CONFIRMED && (
-                  <div className="flex flex-col">
-                    {header()}
-                    {hoveredEntity && hoveredEntity.p ? (
-                      info(hoveredEntity.p, hoveredEntity.z, true)
-                    ) : (
-                      <div className="flex flex-col mb-2 uppercase">
-                        {statsinfo()}
+                  )}
+                  {mode <= MODE.STATS_CONFIRMED && (
+                    <div className="flex flex-col">
+                      {header()}
+                      {hoveredEntity && hoveredEntity.p ? (
+                        info(hoveredEntity.p, hoveredEntity.z, true)
+                      ) : (
+                        <div className="flex flex-col mb-2 uppercase">
+                          {statsinfo()}
+                        </div>
+                      )}
+                      <div className="text-mobilexs lg:text-mobile">
+                        Hover/select a point for detailed information.
                       </div>
-                    )}
-                    <div className="text-mobilexs lg:text-mobile">
-                      Hover/select a point for detailed information.
                     </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="flex flex-col">
-                <div className="flex flex-col mb-2">
-                  <div className="flex font-extrabold">CARE</div>
-                  <div className="flex text-mobiles lg:text-mobilel">
-                    LOGIN WITH CARE CREDENTIALS
-                  </div>
+                  )}
                 </div>
-                <form className="pointer-events-auto" onSubmit={handleSubmit}>
-                  <div>
-                    <div className="text-mobiles lg:text-xs">USERNAME</div>
-                    <input
-                      className="w-full font-semibold bg-transparent text-mobile lg:text-sm"
-                      id="username"
-                      type="text"
-                      placeholder="USERNAME"
-                      onChange={handleChange}
-                    />
+              ) : (
+                <div className="flex flex-col">
+                  <div className="flex flex-col mb-2">
+                    <div className="flex font-extrabold">CARE</div>
+                    <div className="flex text-mobiles lg:text-mobilel">
+                      LOGIN WITH CARE CREDENTIALS
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-mobiles lg:text-xs">PASSWORD</div>
-                    <input
-                      className="w-full font-semibold bg-transparent text-mobile lg:text-sm"
-                      id="password"
-                      type="password"
-                      placeholder="*******"
-                      onChange={handleChange}
-                      autoComplete="off"
-                    />
-                  </div>
-                  <button
-                    className="font-semibold leading-none text-center text-mobiles lg:text-sm"
-                    type="submit"
-                  >
-                    SIGN IN
-                  </button>
-                  <div className="text-mobilexs lg:text-mobile">
-                    {careData.loginInfo}
-                  </div>
-                </form>
-              </div>
-            )}
-          </div>
-        )}
-        {control()}
+                  <form className="pointer-events-auto" onSubmit={handleSubmit}>
+                    <div>
+                      <div className="text-mobiles lg:text-xs">USERNAME</div>
+                      <input
+                        className="w-full font-semibold bg-transparent text-mobile lg:text-sm"
+                        id="username"
+                        type="text"
+                        placeholder="USERNAME"
+                        onChange={handleChange}
+                      />
+                    </div>
+                    <div>
+                      <div className="text-mobiles lg:text-xs">PASSWORD</div>
+                      <input
+                        className="w-full font-semibold bg-transparent text-mobile lg:text-sm"
+                        id="password"
+                        type="password"
+                        placeholder="*******"
+                        onChange={handleChange}
+                        autoComplete="off"
+                      />
+                    </div>
+                    <button
+                      className="font-semibold leading-none text-center text-mobiles lg:text-sm"
+                      type="submit"
+                    >
+                      SIGN IN
+                    </button>
+                    <div className="text-mobilexs lg:text-mobile">
+                      {careData.loginInfo}
+                    </div>
+                  </form>
+                </div>
+              )}
+            </div>
+          )}
+          {control()}
+        </div>
       </div>
     </div>
   );

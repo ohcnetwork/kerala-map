@@ -5,7 +5,15 @@ import MapGL, {
   Source,
 } from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
-import { MAP, MODE, MODE_DEFAULT, STATS, ZONE, CARE_KEY } from "../constants";
+import {
+  CARE_KEY,
+  DISTRICTS,
+  MAP,
+  MODE,
+  MODE_DEFAULT,
+  STATS,
+  ZONE,
+} from "../constants";
 import Card from "./Card";
 
 export default function MapBox({
@@ -36,15 +44,10 @@ export default function MapBox({
     home_obs: 0,
     hospital_today: 0,
   });
-  const [careMax, setCareMax] = useState({
-    icu: 0,
-    ventilator: 0,
-    bed: 0,
-    room: 0,
-  });
 
   const [showHotspot2D, setShowHotspot2D] = useState(false);
   const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
+  const [filter, setFilter] = useState(DISTRICTS);
 
   useEffect(() => {
     if (geolocatedLoc == null) {
@@ -86,19 +89,6 @@ export default function MapBox({
       home_obs: home_obs,
       hospital_today: hospital_today,
     });
-    let caremax = {
-      icu: 0,
-      ventilator: 0,
-      bed: 0,
-      room: 0,
-    };
-    Object.keys(caremax).forEach((e) => {
-      caremax[e] = care.hospitals.features.reduce(
-        (a, r) => Math.max(r.properties[e + "_total"], a),
-        care.hospitals.features[0].properties[e + "_total"]
-      );
-    });
-    setCareMax(caremax)
   }, []);
 
   const hotspotActive = (event) => {
@@ -149,11 +139,13 @@ export default function MapBox({
       hotspotActive(event);
     }
     if (
-      mode === MODE.CARE_VENTILATOR ||
-      mode === MODE.CARE_ICU ||
-      mode === MODE.CARE_BED ||
-      mode === MODE.CARE_ROOM ||
-      mode === MODE.CARE_HOSPITALS
+      [
+        MODE.CARE_VENTILATOR,
+        MODE.CARE_ICU,
+        MODE.CARE_BED,
+        MODE.CARE_ROOM,
+        MODE.CARE_HOSPITALS,
+      ].includes(mode)
     ) {
       careActive(event);
     }
@@ -379,6 +371,26 @@ export default function MapBox({
     </div>
   );
 
+  const hospitalsFiltered = () => {
+    let data = Object.assign({}, care.hospitals);
+    data.features = data.features.filter(({ properties }) => {
+      if (
+        [
+          MODE.CARE_VENTILATOR,
+          MODE.CARE_ICU,
+          MODE.CARE_BED,
+          MODE.CARE_ROOM,
+        ].includes(mode)
+      ) {
+        return (
+          properties[CARE_KEY.find((j) => j[0] === mode)[1] + "_total"] !== 0
+        );
+      }
+      return true;
+    });
+    return data;
+  };
+
   return (
     <div className="flex flex-col min-w-full min-h-full lg:flex-row">
       <Card
@@ -394,6 +406,8 @@ export default function MapBox({
         setCare={setCare}
         showHotspot2D={showHotspot2D}
         setShowHotspot2D={setShowHotspot2D}
+        filter={filter}
+        setFilter={setFilter}
       />
       <div
         className="flex flex-grow w-full lg:w-5/6"
@@ -415,7 +429,7 @@ export default function MapBox({
           <Source id="district" type="geojson" data={geoJSONs.district} />
           <Source id="lsgd" type="geojson" data={geoJSONs.lsgd} />
           {care.hospitals.features && (
-            <Source id="care" type="geojson" data={care.hospitals} />
+            <Source id="care" type="geojson" data={hospitalsFiltered()} />
           )}
           {mode === MODE.HOTSPOTS_LSGD && (
             <div>
@@ -546,10 +560,12 @@ export default function MapBox({
               {GenLL("district")}
             </div>
           )}
-          {(mode === MODE.CARE_VENTILATOR ||
-            mode === MODE.CARE_ICU ||
-            mode === MODE.CARE_BED ||
-            mode === MODE.CARE_ROOM) && (
+          {[
+            MODE.CARE_VENTILATOR,
+            MODE.CARE_ICU,
+            MODE.CARE_BED,
+            MODE.CARE_ROOM,
+          ].includes(mode) && (
             <div>
               {showHotspot2D && hotspot2d()}
               {GenLL("lsgd")}
@@ -568,7 +584,16 @@ export default function MapBox({
                         "get",
                         CARE_KEY.find((j) => j[0] === mode)[1] + "_total",
                       ],
-                      careMax[CARE_KEY.find((j) => j[0] === mode)[1]]
+                      care.hospitals.features.reduce(
+                        (a, r) =>
+                          Math.max(
+                            r.properties[
+                              CARE_KEY.find((j) => j[0] === mode)[1] + "_total"
+                            ],
+                            a
+                          ),
+                        0
+                      ),
                     ],
                     0,
                     2000,
@@ -604,11 +629,7 @@ export default function MapBox({
               />
               <Filter
                 layerId="points"
-                filter={[
-                  "!=",
-                  CARE_KEY.find((j) => j[0] === mode)[1] + "_total",
-                  0,
-                ]}
+                filter={["in", ["get", "district"], ["literal", filter]]}
               />
             </div>
           )}
@@ -629,6 +650,10 @@ export default function MapBox({
                 onHover={onHover}
                 onLeave={onLeave}
                 onClick={onClick}
+              />
+              <Filter
+                layerId="hospitals"
+                filter={["in", ["get", "district"], ["literal", filter]]}
               />
             </div>
           )}
