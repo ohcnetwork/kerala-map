@@ -5,7 +5,7 @@ import MapGL, {
   Source,
 } from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
-import { MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
+import { MAP, MODE, MODE_DEFAULT, STATS, ZONE, CARE_KEY } from "../constants";
 import Card from "./Card";
 
 export default function MapBox({
@@ -36,6 +36,13 @@ export default function MapBox({
     home_obs: 0,
     hospital_today: 0,
   });
+  const [careMax, setCareMax] = useState({
+    icu: 0,
+    ventilator: 0,
+    bed: 0,
+    room: 0,
+  });
+
   const [showHotspot2D, setShowHotspot2D] = useState(false);
   const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
 
@@ -79,6 +86,19 @@ export default function MapBox({
       home_obs: home_obs,
       hospital_today: hospital_today,
     });
+    let caremax = {
+      icu: 0,
+      ventilator: 0,
+      bed: 0,
+      room: 0,
+    };
+    Object.keys(caremax).forEach((e) => {
+      caremax[e] = care.hospitals.features.reduce(
+        (a, r) => Math.max(r.properties[e + "_total"], a),
+        care.hospitals.features[0].properties[e + "_total"]
+      );
+    });
+    setCareMax(caremax)
   }, []);
 
   const hotspotActive = (event) => {
@@ -131,6 +151,8 @@ export default function MapBox({
     if (
       mode === MODE.CARE_VENTILATOR ||
       mode === MODE.CARE_ICU ||
+      mode === MODE.CARE_BED ||
+      mode === MODE.CARE_ROOM ||
       mode === MODE.CARE_HOSPITALS
     ) {
       careActive(event);
@@ -524,7 +546,10 @@ export default function MapBox({
               {GenLL("district")}
             </div>
           )}
-          {(mode === MODE.CARE_VENTILATOR || mode === MODE.CARE_ICU) && (
+          {(mode === MODE.CARE_VENTILATOR ||
+            mode === MODE.CARE_ICU ||
+            mode === MODE.CARE_BED ||
+            mode === MODE.CARE_ROOM) && (
             <div>
               {showHotspot2D && hotspot2d()}
               {GenLL("lsgd")}
@@ -534,7 +559,22 @@ export default function MapBox({
                 type="fill-extrusion"
                 source={"care"}
                 paint={{
-                  "fill-extrusion-height": 10000,
+                  "fill-extrusion-height": [
+                    "interpolate",
+                    ["exponential", 2],
+                    [
+                      "/",
+                      [
+                        "get",
+                        CARE_KEY.find((j) => j[0] === mode)[1] + "_total",
+                      ],
+                      careMax[CARE_KEY.find((j) => j[0] === mode)[1]]
+                    ],
+                    0,
+                    2000,
+                    1,
+                    10000,
+                  ],
                   "fill-extrusion-color": [
                     "interpolate",
                     ["linear"],
@@ -542,15 +582,11 @@ export default function MapBox({
                       "/",
                       [
                         "get",
-                        mode === MODE.CARE_VENTILATOR
-                          ? "ventilator_current"
-                          : "icu_current",
+                        CARE_KEY.find((j) => j[0] === mode)[1] + "_current",
                       ],
                       [
                         "get",
-                        mode === MODE.CARE_VENTILATOR
-                          ? "ventilator_total"
-                          : "icu_total",
+                        CARE_KEY.find((j) => j[0] === mode)[1] + "_total",
                       ],
                     ],
                     0,
@@ -570,7 +606,7 @@ export default function MapBox({
                 layerId="points"
                 filter={[
                   "!=",
-                  mode === MODE.CARE_ICU ? "icu_total" : "ventilator_total",
+                  CARE_KEY.find((j) => j[0] === mode)[1] + "_total",
                   0,
                 ]}
               />

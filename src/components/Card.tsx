@@ -8,6 +8,7 @@ import {
   MODE_SUBHEADER_LANG,
   STATS,
   ZONE,
+  CARE_KEY,
 } from "../constants";
 import { careLogin, getCareStats } from "../requests";
 
@@ -163,40 +164,30 @@ export default function Card({
   const hosinfo = () => {
     let data = care.hospitals;
     let hos = data.features.length;
-    let icu_current = data.features.reduce(
-      (a, r) => a + r.properties.icu_current,
-      0
-    );
-    let icu_total = data.features.reduce(
-      (a, r) => a + r.properties.icu_total,
-      0
-    );
-    let ventilator_current = data.features.reduce(
-      (a, r) => a + r.properties.ventilator_current,
-      0
-    );
-    let ventilator_total = data.features.reduce(
-      (a, r) => a + r.properties.ventilator_total,
-      0
-    );
     return (
       <div className="flex flex-col mb-2 uppercase">
         <div>
           <div className="text-mobiles lg:text-xs">NO OF HOSPITALS</div>
           <div className="font-semibold text-mobile lg:text-sm">{hos}</div>
         </div>
-        <div>
-          <div className="text-mobiles lg:text-xs">ICU CAPACITY</div>
-          <div className="font-semibold text-mobile lg:text-sm">
-            {icu_current}/{icu_total}
+        {CARE_KEY.map((e, i) => (
+          <div key={i}>
+            <div className="text-mobiles lg:text-xs">
+              {e[1].toString().toUpperCase() + " CAPACITY"}
+            </div>
+            <div className="font-semibold text-mobile lg:text-sm">
+              {data.features.reduce(
+                (a, r) => a + r.properties[e[1] + "_current"],
+                0
+              )}
+              /
+              {data.features.reduce(
+                (a, r) => a + r.properties[e[1] + "_total"],
+                0
+              )}
+            </div>
           </div>
-        </div>
-        <div>
-          <div className="text-mobiles lg:text-xs">VENTILATOR CAPACITY</div>
-          <div className="font-semibold text-mobile lg:text-sm">
-            {ventilator_current}/{ventilator_total}
-          </div>
-        </div>
+        ))}
       </div>
     );
   };
@@ -265,7 +256,13 @@ export default function Card({
           {modeCard === "ZONES" &&
             subControl(["HOTSPOTS_LSGD", "HOTSPOTS_DISTRICT"])}
           {modeCard === "CARE" &&
-            subControl(["CARE_ICU", "CARE_VENTILATOR", "CARE_HOSPITALS"])}
+            subControl([
+              "CARE_ICU",
+              "CARE_VENTILATOR",
+              "CARE_BED",
+              "CARE_ROOM",
+              "CARE_HOSPITALS",
+            ])}
         </div>
         {controlTip && (
           <div
@@ -384,6 +381,8 @@ export default function Card({
                 )}
                 {(mode === MODE.CARE_ICU ||
                   mode === MODE.CARE_VENTILATOR ||
+                  mode === MODE.CARE_BED ||
+                  mode === MODE.CARE_ROOM ||
                   mode === MODE.CARE_HOSPITALS) && (
                   <div className="flex flex-col">
                     {header()}
@@ -433,28 +432,21 @@ export default function Card({
                             {hoveredEntity.type}
                           </div>
                         </div>
-                        {hoveredEntity.icu_total !== 0 && (
-                          <div>
-                            <div className="text-mobiles lg:text-xs">
-                              ICU CAPACITY
-                            </div>
-                            <div className="font-semibold text-mobile lg:text-sm">
-                              {hoveredEntity.icu_current}/
-                              {hoveredEntity.icu_total}
-                            </div>
+                        {CARE_KEY.map((e, i) => (
+                          <div key={i}>
+                            {hoveredEntity[e[1] + "_total"] !== 0 && (
+                              <div>
+                                <div className="text-mobiles lg:text-xs">
+                                  {e[1].toString().toUpperCase() + " CAPACITY"}
+                                </div>
+                                <div className="font-semibold text-mobile lg:text-sm">
+                                  {hoveredEntity[e[1] + "_current"]}/
+                                  {hoveredEntity[e[1] + "_total"]}
+                                </div>
+                              </div>
+                            )}
                           </div>
-                        )}
-                        {hoveredEntity.ventilator_total !== 0 && (
-                          <div>
-                            <div className="text-mobiles lg:text-xs">
-                              VENTILATOR CAPACITY
-                            </div>
-                            <div className="font-semibold text-mobile lg:text-sm">
-                              {hoveredEntity.ventilator_current}/
-                              {hoveredEntity.ventilator_total}
-                            </div>
-                          </div>
-                        )}
+                        ))}
                         <div className="mt-2 text-mobiles lg:text-xs">
                           DISTRICT STATS
                         </div>

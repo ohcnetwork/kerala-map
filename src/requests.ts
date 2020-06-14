@@ -77,12 +77,14 @@ export async function getCareStats(f = false) {
       const reducer = (a, r) => {
         let _icu = r.availability.find((k) => k.room_type === 10);
         let _ven = r.availability.find((k) => k.room_type === 20);
-        if (r.location && (_icu || _ven)) {
+        let _bed = r.availability.find((k) => k.room_type === 1);
+        let _room = r.availability.find((k) => k.room_type === 2);
+        if (r.location && (_icu || _ven || _bed || _room)) {
           a.push({
             type: "Feature",
             ...new Circle(
               [r.location.longitude, r.location.latitude],
-              500, //The radius of the circle in meters.
+              200, //The radius of the circle in meters.
               5 //How many steps will be used to create the polygon that represents the circle. i.e number of poins in the polyon array
             ),
             point: [r.location.longitude, r.location.latitude],
@@ -100,6 +102,10 @@ export async function getCareStats(f = false) {
               icu_total: _icu ? _icu.total_capacity : 0,
               ventilator_current: _ven ? _ven.current_capacity : 0,
               ventilator_total: _ven ? _ven.total_capacity : 0,
+              bed_current: _bed ? _bed.current_capacity : 0,
+              bed_total: _bed ? _bed.total_capacity : 0,
+              room_current: _room ? _room.current_capacity : 0,
+              room_total: _room ? _room.total_capacity : 0,
             },
           });
         }
