@@ -4,5 +4,9 @@ module.exports = {
     {
       resolve: "@poi/plugin-typescript",
     },
+    {
+      resolve: "@poi/plugin-pwa",
+      options: {},
+    },
   ],
 };
