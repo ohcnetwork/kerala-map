@@ -73,31 +73,31 @@ export async function getCareStats(f = false) {
           },
         }
       );
-      let hos = Object.values(res.data);
+      let hos = res.data.results.filter((item) => item.data.id);
       const reducer = (a, r) => {
-        let _icu = r.availability.find((k) => k.room_type === 10);
-        let _ven = r.availability.find((k) => k.room_type === 20);
-        let _bed = r.availability.find((k) => k.room_type === 1);
-        let _room = r.availability.find((k) => k.room_type === 2);
-        if (r.location && (_icu || _ven || _bed || _room)) {
+        let _icu = r.data.availability.find((k) => k.room_type === 10);
+        let _ven = r.data.availability.find((k) => k.room_type === 20);
+        let _bed = r.data.availability.find((k) => k.room_type === 1);
+        let _room = r.data.availability.find((k) => k.room_type === 3);
+        if (r.data.location && (_icu || _ven || _bed || _room)) {
           a.push({
             type: "Feature",
             ...new Circle(
-              [r.location.longitude, r.location.latitude],
+              [r.data.location.longitude, r.data.location.latitude],
               200, //The radius of the circle in meters.
               5 //How many steps will be used to create the polygon that represents the circle. i.e number of poins in the polyon array
             ),
-            point: [r.location.longitude, r.location.latitude],
+            point: [r.data.location.longitude, r.data.location.latitude],
             properties: {
-              id: r.id,
-              name: r.name,
-              address: r.address,
+              id: r.data.id,
+              name: r.data.name,
+              address: r.data.address,
               district:
-                r.district_object.name === "Kasargode"
+                r.data.district_object.name === "Kasargode"
                   ? "Kasaragod"
-                  : r.district_object.name,
-              phoneNo: r.phone_number,
-              type: r.facility_type,
+                  : r.data.district_object.name,
+              phoneNo: r.data.phone_number,
+              type: r.data.facility_type,
               icu_current: _icu ? _icu.current_capacity : 0,
               icu_total: _icu ? _icu.total_capacity : 0,
               ventilator_current: _ven ? _ven.current_capacity : 0,
