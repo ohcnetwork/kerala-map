@@ -13,9 +13,7 @@ export async function getKeralaStats() {
     let lastUpdated = res.data.last_updated;
     res = await axios.get("https://keralastats.coronasafe.live/hotspots.json");
     let hotspots = res.data.hotspots;
-    res = await axios.get("https://keralastats.coronasafe.live/zones.json");
-    let districts = res.data.districts;
-    return { latest, summary, hotspots, districts, lastUpdated };
+    return { latest, summary, hotspots, lastUpdated };
   } catch (error) {
     throw error;
   }

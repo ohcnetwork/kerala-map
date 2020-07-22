@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { Plus } from "react-feather";
-import { DISTRICTS, MODE, MODE_BUTTON, MODE_LANG, MODE_SUBHEADER_LANG, STATS, ZONE } from "../constants";
+import {
+  MODE,
+  MODE_BUTTON,
+  MODE_LANG,
+  MODE_SUBHEADER_LANG,
+  STATS,
+  ZONE,
+} from "../constants";
 
 export default function Card({
   mode,
@@ -11,19 +18,11 @@ export default function Card({
   hoveredEntity,
   geolocatedLoc,
   setGeolocatedLoc,
-  showHotspot2D,
-  setShowHotspot2D,
-  filter,
-  setFilter,
 }) {
   const lens = {
     CONTAINMENT: zones.hotspots.length,
-    RED: Object.values(zones.districts).filter((x) => x == "red").length,
-    ORANGE: Object.values(zones.districts).filter((x) => x == "orange").length,
-    GREEN: Object.values(zones.districts).filter((x) => x == "green").length,
   };
   const [cardEnabled, setCardEnabled] = useState(true);
-  const [filterCardEnabled, setfilterCardEnabled] = useState(false);
   const [modeCard, setModeCard] = useState("");
   const [controlTip, setControlTip] = useState("");
 
@@ -79,16 +78,6 @@ export default function Card({
               {p.DISTRICT}
             </div>
           </div>
-          {f && (
-            <div>
-              <div className="text-mobiles lg:text-xs">ZONE</div>
-              <div
-                className={`font-semibold text-mobile lg:text-sm ${ZONE.COLOR_TEXT[z]}`}
-              >
-                {z}
-              </div>
-            </div>
-          )}
         </div>
         {distStats(p.DISTRICT)}
       </div>
@@ -122,39 +111,49 @@ export default function Card({
       cardEnabled && (
         <div className="flex flex-col">
           <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
-            {["STATS", "ZONES"].map((a, i) => (
-              <div
-                key={i}
-                className={`pointer-events-auto cursor-pointer bg-opacity-50 p-sm ${
-                  dark ? "bg-black" : "bg-white"
-                }`}
-                onClick={() =>
-                  modeCard
-                    ? modeCard === a
-                      ? setModeCard("")
-                      : setModeCard(a)
-                    : setModeCard(a)
-                }
-              >
-                {a}
-              </div>
-            ))}
+            <div
+              className={`pointer-events-auto cursor-pointer bg-opacity-50 p-sm ${
+                dark ? "bg-black" : "bg-white"
+              }`}
+              onClick={() => {
+                setModeCard("");
+                changeMode(MODE.CONTAINMENT);
+              }}
+              onMouseEnter={() =>
+                setControlTip(
+                  MODE_LANG.find((j) => j[0] === MODE.CONTAINMENT)[1].toString()
+                )
+              }
+              onMouseLeave={() => setControlTip("")}
+            >
+              CONTAINMENT
+            </div>
+            <div
+              className={`pointer-events-auto cursor-pointer bg-opacity-50 p-sm ${
+                dark ? "bg-black" : "bg-white"
+              }`}
+              onClick={() =>
+                modeCard === "STATS" ? setModeCard("") : setModeCard("STATS")
+              }
+            >
+              STATS
+            </div>
           </div>
-          <div className="grid grid-flow-row-dense grid-flow-col-dense grid-cols-none grid-rows-4 gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
-            {modeCard === "STATS" &&
-              subControl([
-                "STATS_ACTIVE",
-                "STATS_DEATH",
-                "STATS_RECOVERED",
-                "STATS_CONFIRMED",
-                "STATS_TOTAL_OBS",
-                "STATS_HOSOBS",
-                "STATS_HOME_OBS",
-                "STATS_HOSTODAY",
-              ])}
-            {modeCard === "ZONES" &&
-              subControl(["HOTSPOTS_LSGD", "HOTSPOTS_DISTRICT"])}
-          </div>
+          {modeCard && (
+            <div className="grid grid-flow-row-dense grid-flow-col-dense grid-cols-none grid-rows-4 gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
+              {modeCard === "STATS" &&
+                subControl([
+                  "STATS_ACTIVE",
+                  "STATS_DEATH",
+                  "STATS_RECOVERED",
+                  "STATS_CONFIRMED",
+                  "STATS_TOTAL_OBS",
+                  "STATS_HOSOBS",
+                  "STATS_HOME_OBS",
+                  "STATS_HOSTODAY",
+                ])}
+            </div>
+          )}
           {controlTip && (
             <div
               className={`flex text-mobilexs lg:text-mobile p-sm bg-opacity-50 self-start ${
@@ -170,64 +169,12 @@ export default function Card({
   };
 
   const header = () => {
-    let h = mode <= MODE.STATS_CONFIRMED ? "STATS" : "ZONE";
+    let h = mode <= MODE.STATS_CONFIRMED ? "STATS" : "CONTAINMENT";
     let sh = MODE_SUBHEADER_LANG.find((j) => j[0] === mode)[1].toString();
     return (
       <div className="flex flex-col mb-2">
         <div className="flex font-extrabold">{h}</div>
         <div className="flex text-mobiles lg:text-mobilel">{sh}</div>
-      </div>
-    );
-  };
-
-  const filterCard = () => {
-    return (
-      <div
-        className={`flex flex-col text-mobilexs order-last lg:text-mobilel p-2 bg-opacity-50 my-2 h-full w-full ${
-          dark ? "bg-black text-white" : "bg-white text-black"
-        } `}
-      >
-        <div className="flex flex-col w-full">
-          <div className="mb-1 font-bold">FILTER BY DISTRICTS</div>
-          {DISTRICTS.map((d) => {
-            return (
-              <div className="flex flex-row items-center">
-                <div
-                  className={`${
-                    filter.includes(d) ? "bg-green-500 " : "bg-white "
-                  } flex w-1 h-1 lg:h-2 lg:w-2 my-1 mr-1  cursor-pointer
-                `}
-                  onClick={() => {
-                    if (filter.includes(d)) {
-                      setFilter(filter.filter((i) => i != d));
-                    } else {
-                      setFilter(filter.concat([d]));
-                    }
-                  }}
-                ></div>
-                <div className="leading-none">{d}</div>
-              </div>
-            );
-          })}
-          <div className="mt-1">
-            <div
-              className="cursor-pointer"
-              onClick={() => {
-                setFilter(DISTRICTS);
-              }}
-            >
-              SELECT ALL
-            </div>
-            <div
-              className="cursor-pointer"
-              onClick={() => {
-                setFilter([]);
-              }}
-            >
-              SELECT NONE
-            </div>
-          </div>
-        </div>
       </div>
     );
   };
@@ -256,7 +203,7 @@ export default function Card({
                 dark ? "bg-black" : "bg-white"
               } `}
             >
-              {[MODE.HOTSPOTS_DISTRICT, MODE.HOTSPOTS_LSGD].includes(mode) && (
+              {mode === MODE.CONTAINMENT && (
                 <div className="flex flex-col">
                   {header()}
                   {!geolocatedLoc ? (

@@ -11,7 +11,7 @@ function App() {
     summary: {},
     lastUpdated: "",
   });
-  const [zones, setZones] = useState({ districts: {}, hotspots: [] });
+  const [zones, setZones] = useState({ hotspots: [] });
   const [fetched, setFetched] = useState(false);
   const [geoJSONs, setGeoJSONs] = useState({ lsgd: null, district: null });
 
@@ -23,12 +23,11 @@ function App() {
             latest,
             summary,
             hotspots,
-            districts,
             lastUpdated,
           } = await getKeralaStats();
           let { lsgd, district } = await getGeoJSONs();
           setGeoJSONs({ lsgd: lsgd, district: district });
-          setZones({ districts: districts, hotspots: hotspots });
+          setZones({ hotspots: hotspots });
           setStats({
             latest: latest,
             summary: summary,

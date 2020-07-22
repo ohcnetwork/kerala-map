@@ -17,16 +17,10 @@ export const MAP = {
 
 export const ZONE = {
   COLOR: {
-    CONTAINMENT: "#3182CE",
-    RED: "#E53E3E",
-    ORANGE: "#DD6B20",
-    GREEN: "#38A169",
+    CONTAINMENT: "#c21313",
   },
   COLOR_TEXT: {
-    CONTAINMENT: "text-blue-600",
-    RED: "text-red-600",
-    ORANGE: "text-orange-600",
-    GREEN: "text-green-600",
+    CONTAINMENT: "text-red-700",
   },
   HEIGHT_MULTIPLIER: 2,
 };
@@ -74,8 +68,7 @@ export const MODE = {
   STATS_HOME_OBS: 5,
   STATS_HOSTODAY: 6,
   STATS_CONFIRMED: 7,
-  HOTSPOTS_LSGD: 8,
-  HOTSPOTS_DISTRICT: 9,
+  CONTAINMENT: 8,
 };
 
 export const MODE_BUTTON = [
@@ -87,8 +80,7 @@ export const MODE_BUTTON = [
   [MODE.STATS_HOME_OBS, "HOME OBSERVATION"],
   [MODE.STATS_HOSTODAY, "HOSPITALIZED TODAY"],
   [MODE.STATS_CONFIRMED, "CONFIRMED"],
-  [MODE.HOTSPOTS_LSGD, "LSGD"],
-  [MODE.HOTSPOTS_DISTRICT, "DISTRICT"],
+  [MODE.CONTAINMENT, "CONTAINMENT"],
 ];
 
 export const MODE_LANG = [
@@ -100,8 +92,7 @@ export const MODE_LANG = [
   [MODE.STATS_HOME_OBS, "Shows total people in home observation."],
   [MODE.STATS_HOSTODAY, "Shows people hospitalized today."],
   [MODE.STATS_CONFIRMED, "Shows confirmed cases."],
-  [MODE.HOTSPOTS_LSGD, "Shows hotspots and LSGD zones."],
-  [MODE.HOTSPOTS_DISTRICT, "Shows district zones."],
+  [MODE.CONTAINMENT, "Shows containment zones."],
 ];
 
 export const MODE_SUBHEADER_LANG = [
@@ -113,11 +104,10 @@ export const MODE_SUBHEADER_LANG = [
   [MODE.STATS_HOME_OBS, "HOME OBSERVATION"],
   [MODE.STATS_HOSTODAY, "HOSPITALIZED TODAY"],
   [MODE.STATS_CONFIRMED, "CONFIRMED CASES"],
-  [MODE.HOTSPOTS_LSGD, "HOTSPOTS AND LSGD ZONES"],
-  [MODE.HOTSPOTS_DISTRICT, "DISTRICT ZONES"],
+  [MODE.CONTAINMENT, "CONTAINMENT ZONES"],
 ];
 
-export const MODE_DEFAULT = MODE.HOTSPOTS_LSGD;
+export const MODE_DEFAULT = MODE.CONTAINMENT;
 
 export const DISTRICTS = [
   "Thiruvananthapuram",

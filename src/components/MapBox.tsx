@@ -5,7 +5,7 @@ import MapGL, {
   Source,
 } from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
-import { DISTRICTS, MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
+import { MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
 import Card from "./Card";
 
 export default function MapBox({ dark, stats, zones, geoJSONs }) {
@@ -30,8 +30,6 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
     hospital_today: 0,
   });
 
-  const [showHotspot2D, setShowHotspot2D] = useState(false);
-  const [filter, setFilter] = useState(DISTRICTS);
   const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
 
   useEffect(() => {
@@ -82,13 +80,10 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
       hoveredEntity === null ||
       (hoveredEntity && hoveredEntity.id !== f.id)
     ) {
-      let z = f.layer.id.includes("lsgd-hot")
-        ? "CONTAINMENT"
-        : zones.districts[f.properties.DISTRICT].toUpperCase();
       setHoveredEntity({
         id: f.id,
         p: f.properties,
-        z: z,
+        z: "CONTAINMENT",
       });
     }
   };
@@ -102,17 +97,16 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
       setHoveredEntity({
         id: f.properties.FID,
         p: f.properties,
-        z: zones.districts[f.properties.DISTRICT].toUpperCase(),
+        z: "CONTAINMENT",
       });
     }
   };
 
   const _setHoveredEntity = (event) => {
-    if (mode === MODE.HOTSPOTS_DISTRICT || mode === MODE.HOTSPOTS_LSGD) {
-      hotspotActive(event);
-    }
     if (mode <= MODE.STATS_CONFIRMED) {
       statsActive(event);
+    } else {
+      hotspotActive(event);
     }
   };
 
@@ -145,34 +139,23 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
       const p = data.target._userLocationDotMarker._pos;
       let _f = map.queryRenderedFeatures([p.x, p.y]);
       if (!_f) {
-        // alert(errorMsg);
+        alert(errorMsg);
         return;
       }
-      const f = _f.find((e) => e.layer.type === "fill-extrusion");
+      const f = _f.find((e) => e.layer.id === "lsgd-hot");
       if (!f) {
-        // alert(errorMsg);
+        alert(errorMsg);
         return;
       }
-      let z =
-        f.properties.LSGD && lsgdHotspots.includes(f.properties.LSGD)
-          ? "CONTAINMENT"
-          : zones.districts[f.properties.DISTRICT].toUpperCase();
       setGeolocatedLoc({
         p: f.properties,
-        z: z,
+        z: "CONTAINMENT",
       });
     }
   };
 
   const onError = (error) => {
     console.log("A geolocate event has occurred.", error);
-  };
-
-  const zoneHeight = (z) => {
-    return (
-      ZONE.HEIGHT_MULTIPLIER *
-      (z === "GREEN" ? 500 : z === "ORANGE" ? 1500 : z === "RED" ? 3000 : 5000)
-    );
   };
 
   const GenLL = (s: string, label = true) => {
@@ -191,6 +174,17 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
             "line-translate-anchor": "viewport",
           }}
         />
+        {s != "district" && (
+          <Layer
+            id={`${s}-fill`}
+            before="lsgd-hot"
+            type="fill"
+            source={s}
+            paint={{
+              "fill-color": dark ? "#7e8080" : "#f5f5f5",
+            }}
+          />
+        )}
         {label && (
           <Layer
             id={`${s}-label`}
@@ -290,49 +284,6 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
     return k * STATS.HEIGHT_MULTIPLIER;
   };
 
-  const hotspot2d = () => (
-    <div>
-      <Layer
-        id="lsgd-hot-facility"
-        before="lsgd-line"
-        type="fill"
-        source="lsgd"
-        paint={{
-          "fill-color": ZONE.COLOR.CONTAINMENT,
-          "fill-opacity": 0.8,
-        }}
-      />
-      <Filter
-        layerId="lsgd-hot-facility"
-        filter={["in", "LSGD", ...lsgdHotspots]}
-      />
-      {Object.keys(zones.districts).map((key, i) => {
-        return (
-          <div key={i}>
-            <Layer
-              id={`lsgd-not-hot-${key}-facility`}
-              before="lsgd-line"
-              type="fill"
-              source="lsgd"
-              paint={{
-                "fill-color": ZONE.COLOR[zones.districts[key].toUpperCase()],
-                "fill-opacity": 0.8,
-              }}
-            />
-            <Filter
-              layerId={`lsgd-not-hot-${key}-facility`}
-              filter={[
-                "all",
-                ["!in", "LSGD", ...lsgdHotspots],
-                ["==", "DISTRICT", key],
-              ]}
-            />
-          </div>
-        );
-      })}
-    </div>
-  );
-
   return (
     <div className="flex flex-col min-w-full min-h-full lg:flex-row">
       <Card
@@ -344,10 +295,6 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
         dark={dark}
         geolocatedLoc={geolocatedLoc}
         setGeolocatedLoc={setGeolocatedLoc}
-        showHotspot2D={showHotspot2D}
-        setShowHotspot2D={setShowHotspot2D}
-        filter={filter}
-        setFilter={setFilter}
       />
       <div
         className="flex flex-grow w-full lg:w-5/6"
@@ -368,7 +315,7 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
         >
           <Source id="district" type="geojson" data={geoJSONs.district} />
           <Source id="lsgd" type="geojson" data={geoJSONs.lsgd} />
-          {mode === MODE.HOTSPOTS_LSGD && (
+          {mode === MODE.CONTAINMENT && (
             <div>
               <GeolocateControl
                 positionOptions={{ enableHighAccuracy: true, timeout: 1000 }}
@@ -378,12 +325,11 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
               />
               <Layer
                 id="lsgd-hot"
-                type="fill-extrusion"
+                type="fill"
                 source="lsgd"
                 paint={{
-                  "fill-extrusion-color": ZONE.COLOR.CONTAINMENT,
-                  "fill-extrusion-opacity": 0.8,
-                  "fill-extrusion-height": zoneHeight("CONTAINMENT"),
+                  "fill-color": ZONE.COLOR.CONTAINMENT,
+                  "fill-opacity": 0.8,
                 }}
                 onHover={onHover}
                 onLeave={onLeave}
@@ -393,84 +339,15 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
                 layerId="lsgd-hot"
                 filter={["in", "LSGD", ...lsgdHotspots]}
               />
-              {Object.keys(zones.districts).map((key, i) => {
-                return (
-                  <div key={i}>
-                    <Layer
-                      id={`lsgd-not-hot-${key}`}
-                      type="fill-extrusion"
-                      source="lsgd"
-                      paint={{
-                        "fill-extrusion-color":
-                          ZONE.COLOR[zones.districts[key].toUpperCase()],
-                        "fill-extrusion-opacity": 0.8,
-                        "fill-extrusion-height": zoneHeight(
-                          zones.districts[key].toUpperCase()
-                        ),
-                        "fill-extrusion-vertical-gradient": true,
-                      }}
-                      onHover={onHover}
-                      onLeave={onLeave}
-                      onClick={onClick}
-                    />
-                    <Filter
-                      layerId={`lsgd-not-hot-${key}`}
-                      filter={[
-                        "all",
-                        ["!in", "LSGD", ...lsgdHotspots],
-                        ["==", "DISTRICT", key],
-                      ]}
-                    />
-                  </div>
-                );
-              })}
               <div>
                 {GenLL("lsgd")}
                 {GenLL("district")}
               </div>
             </div>
           )}
-          {mode === MODE.HOTSPOTS_DISTRICT && (
-            <div>
-              <GeolocateControl
-                positionOptions={{ enableHighAccuracy: true, timeout: 1000 }}
-                position="bottom-right"
-                onGeolocate={onGeolocate}
-                onError={onError}
-              />
-              {Object.keys(zones.districts).map((key, i) => {
-                return (
-                  <div key={i}>
-                    <Layer
-                      id={`zone-district-${key}`}
-                      type="fill-extrusion"
-                      source="district"
-                      paint={{
-                        "fill-extrusion-color":
-                          ZONE.COLOR[zones.districts[key].toUpperCase()],
-                        "fill-extrusion-opacity": 0.8,
-                        "fill-extrusion-height": zoneHeight(
-                          zones.districts[key].toUpperCase()
-                        ),
-                        "fill-extrusion-vertical-gradient": true,
-                      }}
-                      onHover={onHover}
-                      onLeave={onLeave}
-                      onClick={onClick}
-                    />
-                    <Filter
-                      layerId={`zone-district-${key}`}
-                      filter={["==", "DISTRICT", key]}
-                    />
-                  </div>
-                );
-              })}
-              {GenLL("district")}
-            </div>
-          )}
           {mode <= MODE.STATS_CONFIRMED && (
             <div>
-              {Object.keys(zones.districts).map((key, i) => {
+              {Object.keys(stats.latest).map((key, i) => {
                 return (
                   <div key={i}>
                     <Layer
