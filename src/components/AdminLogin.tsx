@@ -20,6 +20,8 @@ const AdminLogin = ({dark,handleClose}) => {
 
     const handleSubmission = () =>{
         console.log(userName,pass)
+        // apply admin thing to localstorage
+        //localstorage key:admin
     }
 
     return (

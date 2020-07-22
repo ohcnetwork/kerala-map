@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState,useRef } from "react";
 import { Plus } from "react-feather";
 import {
   MODE,
@@ -25,6 +25,11 @@ export default function Card({
   const [cardEnabled, setCardEnabled] = useState(true);
   const [modeCard, setModeCard] = useState("");
   const [controlTip, setControlTip] = useState("");
+  // const admin = localStorage.getItem("admin");
+  const admin = localStorage.getItem("admin");
+  const [editDescription,setEditDescription] = useState(false);
+  const [description,setDescription] = useState("")
+
 
   const distStats = (d) => {
     return Object.keys(STATS.LANG).map((a, i) => (
@@ -80,6 +85,24 @@ export default function Card({
           </div>
         </div>
         {distStats(p.DISTRICT)}
+        <div className="z-50">
+            <div className="text-mobiles lg:text-xs">Description</div>
+              {/* data of description change value to the api key here  */}
+              {
+                editDescription?(
+                  <div className="lg:text-sm flex flex-col z-50">
+                    <input value={description} onChange={(evt)=>{setDescription(evt.target.value)}}
+                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>
+                    <button onClick={()=>{console.log(description)}}
+                    className="self-end shadow appearance-none bg-green-500 rounded py-1 px-2 text-white mt-2 leading-tight">Submit</button>
+                  </div>
+                ):null //add above text type here
+              }
+              {
+                admin? !editDescription && <button onClick={()=>{setEditDescription(true)}}
+                className="self-end shadow appearance-none bg-green-500 rounded py-1 px-2 text-white mt-2 leading-tight">Edit</button>:null
+              }
+          </div>
       </div>
     );
   };
@@ -181,7 +204,7 @@ export default function Card({
 
   return (
     <div className="absolute z-40 flex flex-row w-40 lg:w-64">
-      <div className="flex flex-col flex-grow w-full m-2 pointer-events-none select-none">
+      <div className="flex flex-col flex-grow w-full m-2 select-none">
         <div
           className={`w-24 lg:w-48 relative ${
             dark ? "text-white" : "text-black"
