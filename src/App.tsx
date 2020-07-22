@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Activity, ChevronDown, Moon, Sun } from "react-feather";
+import { User,Activity, ChevronDown, Moon, Sun } from "react-feather";
 import { hot } from "react-hot-loader";
 import MapBox from "./components/MapBox";
+import AdminLogin from "./components/AdminLogin"
 import { getGeoJSONs, getKeralaStats } from "./requests";
 
 function App() {
@@ -11,6 +12,7 @@ function App() {
     summary: {},
     lastUpdated: "",
   });
+  const [modal,setModal] = useState(false);
   const [zones, setZones] = useState({ hotspots: [] });
   const [fetched, setFetched] = useState(false);
   const [geoJSONs, setGeoJSONs] = useState({ lsgd: null, district: null });
@@ -47,6 +49,7 @@ function App() {
         dark ? "bg-dark-500" : "bg-light-500"
       }`}
     >
+      {modal?<AdminLogin dark={dark} handleClose={()=>{setModal(false)}}/>:null}
       <div
         className={`flex flex-col fixed top-0 right-0 z-40 m-2 items-end uppercase fill-current ${
           dark ? "text-white" : "text-black"
@@ -67,6 +70,13 @@ function App() {
         </div>
         <div className="flex group text-mobiles">
           <div className="flex flex-col items-end mt-1 space-y-1 transition duration-150 ease-in-out origin-right transform scale-0 lg:w-full group-hover:scale-100">
+            <span>
+              <div className="flex flex-row items-center cursor-pointer"
+              onClick={()=>{setModal(true)}}>
+                Admin
+                <User className="flex ml-1" size={"0.8rem"} />
+              </div>
+            </span>
             <a href="/">
               <div className="flex flex-row items-center cursor-pointer">
                 Map
