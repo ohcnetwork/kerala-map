@@ -1,17 +1,8 @@
-import { Link, useRoutes } from "raviger";
 import React, { useEffect, useState } from "react";
-import { Activity, ChevronDown, Info, Map, Moon, Sun } from "react-feather";
+import { Activity, ChevronDown, Moon, Sun } from "react-feather";
 import { hot } from "react-hot-loader";
-import Zones from "./components/Info";
 import MapBox from "./components/MapBox";
 import { getGeoJSONs, getKeralaStats } from "./requests";
-
-const routes = {
-  "/": ({ dark, stats, zones, geoJSONs }: any) => (
-    <MapBox stats={stats} zones={zones} dark={dark} geoJSONs={geoJSONs} />
-  ),
-  "/info": ({ dark }: any) => <Zones dark={dark} />,
-};
 
 function App() {
   const [dark, setdark] = useState(true);
@@ -23,9 +14,6 @@ function App() {
   const [zones, setZones] = useState({ districts: {}, hotspots: [] });
   const [fetched, setFetched] = useState(false);
   const [geoJSONs, setGeoJSONs] = useState({ lsgd: null, district: null });
-  const route = useRoutes(routes, {
-    routeProps: { dark, stats, zones, geoJSONs },
-  });
 
   useEffect(() => {
     if (!fetched) {
@@ -80,19 +68,12 @@ function App() {
         </div>
         <div className="flex group text-mobiles">
           <div className="flex flex-col items-end mt-1 space-y-1 transition duration-150 ease-in-out origin-right transform scale-0 lg:w-full group-hover:scale-100">
-            <Link href="/">
+            <a href="/">
               <div className="flex flex-row items-center cursor-pointer">
                 Map
-                <Map className="flex ml-1" size={"0.8rem"} />
+                <Activity className="flex ml-1" size={"0.8rem"} />
               </div>
-            </Link>
-            {/* move route */}
-            <Link href="/">
-              <div className="flex flex-row items-center cursor-pointer">
-                Info
-                <Info className="flex ml-1" size={"0.8rem"} />
-              </div>
-            </Link>
+            </a>
             <a href="https://keralamap.coronasafe.network/">
               <div className="flex flex-row items-center cursor-pointer">
                 Dashboard
@@ -123,7 +104,7 @@ function App() {
           />
         </div>
       </div>
-      {!route ? <div>Not found</div> : route}
+      <MapBox stats={stats} zones={zones} dark={dark} geoJSONs={geoJSONs} />
     </div>
   ) : (
     <div

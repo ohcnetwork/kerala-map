@@ -1,4 +1,9 @@
-import MapGL, { Filter, GeolocateControl, Layer, Source } from "@urbica/react-map-gl";
+import MapGL, {
+  Filter,
+  GeolocateControl,
+  Layer,
+  Source,
+} from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
 import { DISTRICTS, MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
 import Card from "./Card";
@@ -26,8 +31,8 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
   });
 
   const [showHotspot2D, setShowHotspot2D] = useState(false);
-  const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
   const [filter, setFilter] = useState(DISTRICTS);
+  const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
 
   useEffect(() => {
     if (geolocatedLoc == null) {

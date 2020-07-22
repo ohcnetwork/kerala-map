@@ -8,12 +8,10 @@
     "geobuf": "^3.0.1",
     "mapbox-gl": "^1.11.0",
     "pbf": "^3.2.1",
-    "raviger": "^1.4.3",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "react-feather": "^2.0.8",
-    "register-service-worker": "^1.7.1",
-    "terraformer": "^1.0.12"
+    "register-service-worker": "^1.7.1"
   },
   "scripts": {
     "build": "poi --prod",
