@@ -133,18 +133,15 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
   };
 
   const onGeolocate = (data) => {
-    const errorMsg = "Could not locate, please try again.";
     if (mapRef) {
       const map = mapRef.current.getMap();
       const p = data.target._userLocationDotMarker._pos;
       let _f = map.queryRenderedFeatures([p.x, p.y]);
       if (!_f) {
-        alert(errorMsg);
         return;
       }
       const f = _f.find((e) => e.layer.id === "lsgd-hot");
       if (!f) {
-        alert(errorMsg);
         return;
       }
       setGeolocatedLoc({

@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@urbica/react-map-gl": "^1.13.1",
+    "@urbica/react-map-gl": "^1.13.2",
     "axios": "^0.19.2",
-    "geobuf": "^3.0.1",
-    "mapbox-gl": "^1.11.0",
+    "geobuf": "^3.0.2",
+    "mapbox-gl": "^1.11.1",
     "pbf": "^3.2.1",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
@@ -33,15 +33,15 @@
   "devDependencies": {
     "@poi/plugin-pwa": "^12.0.3",
     "@poi/plugin-typescript": "^12.3.1",
-    "@types/mapbox-gl": "^1.10.4",
-    "@types/node": "^14.0.13",
-    "@types/react": "^16.9.38",
+    "@types/mapbox-gl": "^1.11.1",
+    "@types/node": "^14.0.24",
+    "@types/react": "^16.9.43",
     "@types/react-dom": "^16.9.8",
-    "autoprefixer": "^9.8.1",
+    "autoprefixer": "^9.8.5",
     "cssnano": "^4.1.10",
-    "poi": "^12.8.0",
+    "poi": "^12.9.0",
     "react-hot-loader": "^4.12.21",
-    "tailwindcss": "^1.4.6",
-    "typescript": "^3.9.5"
+    "tailwindcss": "^1.5.2",
+    "typescript": "^3.9.7"
   }
 }

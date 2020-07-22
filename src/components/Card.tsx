@@ -48,7 +48,7 @@ export default function Card({
     ));
   };
 
-  const info = (p, z, f) => {
+  const info = (p, z) => {
     return (
       <div className="flex flex-col mb-2 uppercase">
         <div className="mb-2">
@@ -210,7 +210,7 @@ export default function Card({
                     <div className="flex flex-col">
                       {hoveredEntity && hoveredEntity.p ? (
                         <div>
-                          {info(hoveredEntity.p, hoveredEntity.z, true)}
+                          {info(hoveredEntity.p, hoveredEntity.z)}
                           <div className="text-mobilexs lg:text-mobile">
                             Hover/select an area for detailed information.
                           </div>
@@ -254,7 +254,7 @@ export default function Card({
                         Click here for more info
                       </Link> */}
                       </div>
-                      {info(geolocatedLoc.p, geolocatedLoc.z, false)}
+                      {info(geolocatedLoc.p, geolocatedLoc.z)}
                       <div
                         className="uppercase cursor-pointer pointer-events-auto text-mobilexs lg:text-mobiles"
                         onClick={() => setGeolocatedLoc(null)}
@@ -269,7 +269,7 @@ export default function Card({
                 <div className="flex flex-col">
                   {header()}
                   {hoveredEntity && hoveredEntity.p ? (
-                    info(hoveredEntity.p, hoveredEntity.z, true)
+                    info(hoveredEntity.p, hoveredEntity.z)
                   ) : (
                     <div className="flex flex-col mb-2 uppercase">
                       {statsinfo()}
