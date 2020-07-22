@@ -4,18 +4,11 @@ import { Activity, ChevronDown, Info, Map, Moon, Sun } from "react-feather";
 import { hot } from "react-hot-loader";
 import Zones from "./components/Info";
 import MapBox from "./components/MapBox";
-import { getCareStats, getGeoJSONs, getKeralaStats } from "./requests";
+import { getGeoJSONs, getKeralaStats } from "./requests";
 
 const routes = {
-  "/": ({ dark, stats, zones, care, setCare, geoJSONs }: any) => (
-    <MapBox
-      stats={stats}
-      zones={zones}
-      dark={dark}
-      care={care}
-      setCare={setCare}
-      geoJSONs={geoJSONs}
-    />
+  "/": ({ dark, stats, zones, geoJSONs }: any) => (
+    <MapBox stats={stats} zones={zones} dark={dark} geoJSONs={geoJSONs} />
   ),
   "/info": ({ dark }: any) => <Zones dark={dark} />,
 };
@@ -28,13 +21,10 @@ function App() {
     lastUpdated: "",
   });
   const [zones, setZones] = useState({ districts: {}, hotspots: [] });
-  const [care, setCare] = useState({
-    hospitals: {},
-  });
   const [fetched, setFetched] = useState(false);
   const [geoJSONs, setGeoJSONs] = useState({ lsgd: null, district: null });
   const route = useRoutes(routes, {
-    routeProps: { dark, stats, zones, care, setCare, geoJSONs },
+    routeProps: { dark, stats, zones, geoJSONs },
   });
 
   useEffect(() => {
@@ -48,10 +38,8 @@ function App() {
             districts,
             lastUpdated,
           } = await getKeralaStats();
-          let { hospitals } = await getCareStats(true);
           let { lsgd, district } = await getGeoJSONs();
           setGeoJSONs({ lsgd: lsgd, district: district });
-          setCare({ hospitals: hospitals });
           setZones({ districts: districts, hotspots: hotspots });
           setStats({
             latest: latest,

@@ -76,11 +76,6 @@ export const MODE = {
   STATS_CONFIRMED: 7,
   HOTSPOTS_LSGD: 8,
   HOTSPOTS_DISTRICT: 9,
-  CARE_ICU: 10,
-  CARE_VENTILATOR: 11,
-  CARE_BED: 13,
-  CARE_ROOM: 14,
-  CARE_HOSPITALS: 15,
 };
 
 export const MODE_BUTTON = [
@@ -94,11 +89,6 @@ export const MODE_BUTTON = [
   [MODE.STATS_CONFIRMED, "CONFIRMED"],
   [MODE.HOTSPOTS_LSGD, "LSGD"],
   [MODE.HOTSPOTS_DISTRICT, "DISTRICT"],
-  [MODE.CARE_ICU, "ICUS"],
-  [MODE.CARE_VENTILATOR, "VENTILATORS"],
-  [MODE.CARE_BED, "BEDS"],
-  [MODE.CARE_ROOM, "ROOMS"],
-  [MODE.CARE_HOSPITALS, "HOSPITALS"],
 ];
 
 export const MODE_LANG = [
@@ -112,11 +102,6 @@ export const MODE_LANG = [
   [MODE.STATS_CONFIRMED, "Shows confirmed cases."],
   [MODE.HOTSPOTS_LSGD, "Shows hotspots and LSGD zones."],
   [MODE.HOTSPOTS_DISTRICT, "Shows district zones."],
-  [MODE.CARE_ICU, "ICU capacity in hospitals."],
-  [MODE.CARE_VENTILATOR, "Ventilators capacity in hospitals."],
-  [MODE.CARE_BED, "Beds capacity in hospitals."],
-  [MODE.CARE_ROOM, "Private room capacity in hospitals."],
-  [MODE.CARE_HOSPITALS, "Shows hospitals."],
 ];
 
 export const MODE_SUBHEADER_LANG = [
@@ -130,18 +115,6 @@ export const MODE_SUBHEADER_LANG = [
   [MODE.STATS_CONFIRMED, "CONFIRMED CASES"],
   [MODE.HOTSPOTS_LSGD, "HOTSPOTS AND LSGD ZONES"],
   [MODE.HOTSPOTS_DISTRICT, "DISTRICT ZONES"],
-  [MODE.CARE_ICU, "ICU CAPACITY"],
-  [MODE.CARE_VENTILATOR, "VENTILATOR CAPACITY"],
-  [MODE.CARE_BED, "BED CAPACITY"],
-  [MODE.CARE_ROOM, "ROOM CAPACITY"],
-  [MODE.CARE_HOSPITALS, "HOSPITALS"],
-];
-
-export const CARE_KEY = [
-  [MODE.CARE_ICU, "icu"],
-  [MODE.CARE_VENTILATOR, "ventilator"],
-  [MODE.CARE_BED, "bed"],
-  [MODE.CARE_ROOM, "room"],
 ];
 
 export const MODE_DEFAULT = MODE.HOTSPOTS_LSGD;

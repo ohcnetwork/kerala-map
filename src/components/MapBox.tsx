@@ -1,29 +1,9 @@
-import MapGL, {
-  Filter,
-  GeolocateControl,
-  Layer,
-  Source,
-} from "@urbica/react-map-gl";
+import MapGL, { Filter, GeolocateControl, Layer, Source } from "@urbica/react-map-gl";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  CARE_KEY,
-  DISTRICTS,
-  MAP,
-  MODE,
-  MODE_DEFAULT,
-  STATS,
-  ZONE,
-} from "../constants";
+import { DISTRICTS, MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
 import Card from "./Card";
 
-export default function MapBox({
-  dark,
-  stats,
-  zones,
-  care,
-  setCare,
-  geoJSONs,
-}) {
+export default function MapBox({ dark, stats, zones, geoJSONs }) {
   const mapRef = useRef(null);
   const [mode, setMode] = useState(MODE_DEFAULT);
   const [clicked, setClicked] = useState(false);
@@ -122,32 +102,9 @@ export default function MapBox({
     }
   };
 
-  const careActive = (event) => {
-    let f = event.features[0].properties;
-    if (
-      hoveredEntity === null ||
-      (hoveredEntity && hoveredEntity.id !== f.id)
-    ) {
-      setHoveredEntity({
-        ...f,
-      });
-    }
-  };
-
   const _setHoveredEntity = (event) => {
     if (mode === MODE.HOTSPOTS_DISTRICT || mode === MODE.HOTSPOTS_LSGD) {
       hotspotActive(event);
-    }
-    if (
-      [
-        MODE.CARE_VENTILATOR,
-        MODE.CARE_ICU,
-        MODE.CARE_BED,
-        MODE.CARE_ROOM,
-        MODE.CARE_HOSPITALS,
-      ].includes(mode)
-    ) {
-      careActive(event);
     }
     if (mode <= MODE.STATS_CONFIRMED) {
       statsActive(event);
@@ -371,26 +328,6 @@ export default function MapBox({
     </div>
   );
 
-  const hospitalsFiltered = () => {
-    let data = Object.assign({}, care.hospitals);
-    data.features = data.features.filter(({ properties }) => {
-      if (
-        [
-          MODE.CARE_VENTILATOR,
-          MODE.CARE_ICU,
-          MODE.CARE_BED,
-          MODE.CARE_ROOM,
-        ].includes(mode)
-      ) {
-        return (
-          properties[CARE_KEY.find((j) => j[0] === mode)[1] + "_total"] !== 0
-        );
-      }
-      return true;
-    });
-    return data;
-  };
-
   return (
     <div className="flex flex-col min-w-full min-h-full lg:flex-row">
       <Card
@@ -398,12 +335,10 @@ export default function MapBox({
         setMode={setMode}
         zones={zones}
         stats={stats}
-        care={care}
         hoveredEntity={hoveredEntity}
         dark={dark}
         geolocatedLoc={geolocatedLoc}
         setGeolocatedLoc={setGeolocatedLoc}
-        setCare={setCare}
         showHotspot2D={showHotspot2D}
         setShowHotspot2D={setShowHotspot2D}
         filter={filter}
@@ -428,9 +363,6 @@ export default function MapBox({
         >
           <Source id="district" type="geojson" data={geoJSONs.district} />
           <Source id="lsgd" type="geojson" data={geoJSONs.lsgd} />
-          {care.hospitals.features && (
-            <Source id="care" type="geojson" data={hospitalsFiltered()} />
-          )}
           {mode === MODE.HOTSPOTS_LSGD && (
             <div>
               <GeolocateControl
@@ -558,103 +490,6 @@ export default function MapBox({
                 );
               })}
               {GenLL("district")}
-            </div>
-          )}
-          {[
-            MODE.CARE_VENTILATOR,
-            MODE.CARE_ICU,
-            MODE.CARE_BED,
-            MODE.CARE_ROOM,
-          ].includes(mode) && (
-            <div>
-              {showHotspot2D && hotspot2d()}
-              {GenLL("lsgd")}
-              {GenLL("district")}
-              <Layer
-                id="points"
-                type="fill-extrusion"
-                source={"care"}
-                paint={{
-                  "fill-extrusion-height": [
-                    "interpolate",
-                    ["exponential", 2],
-                    [
-                      "/",
-                      [
-                        "get",
-                        CARE_KEY.find((j) => j[0] === mode)[1] + "_total",
-                      ],
-                      care.hospitals.features.reduce(
-                        (a, r) =>
-                          Math.max(
-                            r.properties[
-                              CARE_KEY.find((j) => j[0] === mode)[1] + "_total"
-                            ],
-                            a
-                          ),
-                        0
-                      ),
-                    ],
-                    0,
-                    2000,
-                    1,
-                    10000,
-                  ],
-                  "fill-extrusion-color": [
-                    "interpolate",
-                    ["linear"],
-                    [
-                      "/",
-                      [
-                        "get",
-                        CARE_KEY.find((j) => j[0] === mode)[1] + "_current",
-                      ],
-                      [
-                        "get",
-                        CARE_KEY.find((j) => j[0] === mode)[1] + "_total",
-                      ],
-                    ],
-                    0,
-                    "green",
-                    0.5,
-                    "white",
-                    1,
-                    "red",
-                  ],
-                  "fill-extrusion-opacity": 0.8,
-                }}
-                onHover={onHover}
-                onLeave={onLeave}
-                onClick={onClick}
-              />
-              <Filter
-                layerId="points"
-                filter={["in", ["get", "district"], ["literal", filter]]}
-              />
-            </div>
-          )}
-          {mode === MODE.CARE_HOSPITALS && (
-            <div>
-              {showHotspot2D && hotspot2d()}
-              {GenLL("lsgd")}
-              {GenLL("district")}
-              <Layer
-                id="hospitals"
-                type="fill-extrusion"
-                source={"care"}
-                paint={{
-                  "fill-extrusion-height": 10000,
-                  "fill-extrusion-color": "cyan",
-                  "fill-extrusion-opacity": 0.8,
-                }}
-                onHover={onHover}
-                onLeave={onLeave}
-                onClick={onClick}
-              />
-              <Filter
-                layerId="hospitals"
-                filter={["in", ["get", "district"], ["literal", filter]]}
-              />
             </div>
           )}
         </MapGL>
