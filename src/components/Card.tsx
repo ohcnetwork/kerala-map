@@ -85,22 +85,23 @@ export default function Card({
           </div>
         </div>
         {distStats(p.DISTRICT)}
-        <div className="z-50">
+        <div>
             <div className="text-mobiles lg:text-xs">Description</div>
               {/* data of description change value to the api key here  */}
               {
                 editDescription?(
                   <div className="lg:text-sm flex flex-col z-50">
                     <input value={description} onChange={(evt)=>{setDescription(evt.target.value)}}
-                    className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>
+                    className={`${dark?"border-white":"border-black"} shadow appearance-none border rounded bg-transparent w-full p-1 mb-2 leading-tight focus:outline-none focus:shadow-outline`}/>
                     <button onClick={()=>{console.log(description)}}
-                    className="self-end shadow appearance-none bg-green-500 rounded py-1 px-2 text-white mt-2 leading-tight">Submit</button>
+                    className={`${dark?"border-white":"border-black"} self-end inline-flex justify-center rounded-md border px-1 text-mobile sm:text-mobile leading-6 font-medium shadow-sm hover:text-gray-700 focus:outline-none transition ease-in-out duration-150`}>Submit</button>
                   </div>
                 ):null //add above text type here
               }
               {
-                admin? !editDescription && <button onClick={()=>{setEditDescription(true)}}
-                className="self-end shadow appearance-none bg-green-500 rounded py-1 px-2 text-white mt-2 leading-tight">Edit</button>:null
+                admin? (!editDescription && <button onClick={()=>{setEditDescription(true)}}
+                className={`${dark?"border-white":"border-black"} self-end inline-flex justify-center rounded-md border px-1 text-mobile sm:text-mobile leading-6 font-medium shadow-sm hover:text-gray-700 focus:outline-none transition ease-in-out duration-150`}>Edit</button>)
+                :null
               }
           </div>
       </div>
