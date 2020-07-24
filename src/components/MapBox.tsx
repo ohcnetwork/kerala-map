@@ -1,5 +1,11 @@
-import MapGL, { Filter, GeolocateControl, Layer, Source } from "@urbica/react-map-gl";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import MapGL, {
+  Filter,
+  GeolocateControl,
+  Image,
+  Layer,
+  Source,
+} from "@urbica/react-map-gl";
+import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import { MAP, MODE, STATS, ZONE } from "../constants";
 import { GeoContext } from "../context/GeoContext";
 import { HoveredContext } from "../context/HoveredContext";
@@ -29,8 +35,6 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
     home_obs: 0,
     hospital_today: 0,
   });
-
-  const lsgdHotspots = zones.hotspots.reduce((a, r) => [...a, r.lsgd], []);
 
   useEffect(() => {
     if (geolocatedLoc == null) {
@@ -171,17 +175,6 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
             "line-translate-anchor": "viewport",
           }}
         />
-        {s != "district" && (
-          <Layer
-            id={`${s}-fill`}
-            before="lsgd-hot"
-            type="fill"
-            source={s}
-            paint={{
-              "fill-color": dark ? "#7e8080" : "#c4c4c4",
-            }}
-          />
-        )}
         {label && (
           <Layer
             id={`${s}-label`}
@@ -281,6 +274,57 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
     return k * STATS.HEIGHT_MULTIPLIER;
   };
 
+  const inhotdesc = useMemo(
+    () =>
+      zones.hotspots
+        .filter((i) => {
+          for (const d of descriptions) {
+            if (i.lsgd === d.lsgd && i.district === d.district) {
+              return true;
+            }
+          }
+          return false;
+        })
+        .map((j) => j.lsgd),
+    [zones.hotspots, descriptions]
+  );
+
+  const inhotonly = useMemo(
+    () =>
+      zones.hotspots
+        .filter((i) => {
+          for (const d of descriptions) {
+            if (i.lsgd === d.lsgd && i.district === d.district) {
+              return false;
+            }
+          }
+          return true;
+        })
+        .map((j) => j.lsgd),
+    [zones.hotspots, descriptions]
+  );
+
+  const indesconly = useMemo(
+    () =>
+      descriptions
+        .filter((i) => {
+          for (const d of zones.hotspots) {
+            if (i.lsgd === d.lsgd && i.district === d.district) {
+              return false;
+            }
+          }
+          return true;
+        })
+        .map((j) => j.lsgd),
+    [zones.hotspots, descriptions]
+  );
+  
+  const allwards = useMemo(
+    () =>
+      zones.hotspots.filter((i) => i.wards === "All Wards").map((j) => j.lsgd),
+    [zones.hotspots]
+  );
+
   return (
     <div className="flex flex-col min-w-full min-h-full lg:flex-row">
       <Card zones={zones} stats={stats} descriptions={descriptions} />
@@ -303,6 +347,10 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
         >
           <Source id="district" type="geojson" data={geoJSONs.district} />
           <Source id="lsgd" type="geojson" data={geoJSONs.lsgd} />
+          <Image
+            id="all-ward"
+            image={dark ? "/alert_black.png" : "/alert_white.png"}
+          />
           {mode === MODE.CONTAINMENT && (
             <div>
               <GeolocateControl
@@ -310,6 +358,31 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
                 position="bottom-right"
                 onGeolocate={onGeolocate}
                 onError={onError}
+              />
+              <Layer
+                id="district-fill"
+                before="district-label"
+                type="fill"
+                source="district"
+                paint={{
+                  "fill-color": dark ? "#7e8080" : "#c4c4c4",
+                }}
+              />
+              <Layer
+                id="lsgd-hot-desc"
+                type="fill"
+                source="lsgd"
+                paint={{
+                  "fill-color": "#4f0808",
+                  "fill-opacity": 0.8,
+                }}
+                onHover={onHover}
+                onLeave={onLeave}
+                onClick={onClick}
+              />
+              <Filter
+                layerId="lsgd-hot-desc"
+                filter={["in", "LSGD", ...inhotdesc]}
               />
               <Layer
                 id="lsgd-hot"
@@ -322,6 +395,26 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
                 onHover={onHover}
                 onLeave={onLeave}
                 onClick={onClick}
+              />
+              <Filter
+                layerId="lsgd-hot"
+                filter={["in", "LSGD", ...inhotonly]}
+              />
+              <Layer
+                id="lsgd-desc"
+                type="fill"
+                source="lsgd"
+                paint={{
+                  "fill-color": "#e03434",
+                  "fill-opacity": 0.8,
+                }}
+                onHover={onHover}
+                onLeave={onLeave}
+                onClick={onClick}
+              />
+              <Filter
+                layerId="lsgd-desc"
+                filter={["in", "LSGD", ...indesconly]}
               />
               <Layer
                 id="lsgd-not-hot"
@@ -336,29 +429,40 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
                 onClick={onClick}
               />
               <Filter
-                layerId="lsgd-hot"
-                filter={[
-                  "in",
-                  "LSGD",
-                  ...lsgdHotspots,
-                  ...lsgdHotspots,
-                  ...descriptions.map((l) => l.lsgd),
-                ]}
-              />
-              <Filter
                 layerId="lsgd-not-hot"
                 filter={[
                   "!in",
                   "LSGD",
-                  ...lsgdHotspots,
-                  ...lsgdHotspots,
-                  ...descriptions.map((l) => l.lsgd),
+                  ...inhotdesc,
+                  ...indesconly,
+                  ...inhotonly,
                 ]}
               />
-              <div>
-                {GenLL("lsgd")}
-                {GenLL("district")}
-              </div>
+              {GenLL("lsgd")}
+              {GenLL("district")}
+              {viewport.zoom > 10 && (
+                <>
+                  <Layer
+                    before="lsgd-label"
+                    id="lsgd-hot-all-ward"
+                    type="symbol"
+                    source="lsgd"
+                    layout={{
+                      "icon-allow-overlap": true,
+                      "icon-image": "all-ward",
+                      "icon-size": 1,
+                      "icon-keep-upright": true,
+                    }}
+                    paint={{
+                      "icon-translate-anchor": "viewport",
+                    }}
+                  />
+                  <Filter
+                    layerId="lsgd-hot-all-ward"
+                    filter={["in", "LSGD", ...allwards]}
+                  />
+                </>
+              )}
             </div>
           )}
           {mode <= MODE.STATS_CONFIRMED && (
