@@ -23,7 +23,7 @@ export async function getKeralaStats() {
 
 export async function getDescriptions() {
   try {
-    let { data } = await axios.get("/api/description");
+    let { data } = await axios.get(API_BASE_URL + "/api/description");
     return data.data;
   } catch (error) {
     throw error;
@@ -32,7 +32,7 @@ export async function getDescriptions() {
 
 export async function login(data) {
   try {
-    let res = await axios.post("/api/auth/login", data);
+    let res = await axios.post(API_BASE_URL + "/api/auth/login", data);
     return res.data;
   } catch (error) {
     if (error.response && error.response.status === 401) {
