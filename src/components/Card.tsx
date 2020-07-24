@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Plus } from "react-feather";
+import React, { useContext, useState } from "react";
+import { Edit, Plus } from "react-feather";
 import {
   MODE,
   MODE_BUTTON,
@@ -8,20 +8,21 @@ import {
   STATS,
   ZONE,
 } from "../constants";
+import { AuthContext } from "../context/AuthContext";
+import { GeoContext } from "../context/GeoContext";
+import { HoveredContext } from "../context/HoveredContext";
+import { ModalContext } from "../context/ModalContext";
+import { ModeContext } from "../context/ModeContext";
+import { ThemeContext } from "../context/ThemeContext";
 
-export default function Card({
-  mode,
-  setMode,
-  dark,
-  stats,
-  zones,
-  hoveredEntity,
-  geolocatedLoc,
-  setGeolocatedLoc,
-}) {
-  const lens = {
-    CONTAINMENT: zones.hotspots.length,
-  };
+export default function Card({ stats, zones, descriptions }) {
+  const { mode, setMode } = useContext(ModeContext);
+  const { setModal } = useContext(ModalContext);
+  const { dark } = useContext(ThemeContext);
+  const { auth } = useContext(AuthContext);
+  const { geolocatedLoc, setGeolocatedLoc } = useContext(GeoContext);
+  const { hoveredEntity } = useContext(HoveredContext);
+
   const [cardEnabled, setCardEnabled] = useState(true);
   const [modeCard, setModeCard] = useState("");
   const [controlTip, setControlTip] = useState("");
@@ -49,35 +50,55 @@ export default function Card({
   };
 
   const info = (p, z) => {
+    let desc = descriptions.find(
+      (e) => e.lsgd === p.LSGD && e.district === p.DISTRICT
+    );
     return (
       <div className="flex flex-col mb-2 uppercase">
         <div className="mb-2">
-          {p.LSGD && (
-            <div>
-              <div className="text-mobiles lg:text-xs">LSGD</div>
-              <div className="font-semibold text-mobile lg:text-sm">
-                {p.LSGD}
-              </div>
-            </div>
-          )}
-          {p.LSGD && z === "CONTAINMENT" && (
-            <div>
-              <div className="text-mobiles lg:text-xs">WARDS</div>
-              <div className="font-semibold text-mobile lg:text-sm">
-                {
-                  zones.hotspots.find(
-                    (e) => e.lsgd === p.LSGD && e.district === p.DISTRICT
-                  ).wards
-                }
-              </div>
-            </div>
-          )}
           <div>
             <div className="text-mobiles lg:text-xs">DISTRICT</div>
             <div className="font-semibold text-mobile lg:text-sm">
               {p.DISTRICT}
             </div>
           </div>
+          {p.LSGD && (
+            <div>
+              <div className="text-mobiles lg:text-xs">LSGD</div>
+              <div className="font-semibold text-mobile lg:text-sm">
+                {p.LSGD}
+              </div>
+              <div className="text-mobiles lg:text-xs">WARDS</div>
+              <div className="font-semibold text-mobile lg:text-sm">
+                {zones.hotspots.find(
+                  (e) => e.lsgd === p.LSGD && e.district === p.DISTRICT
+                )?.wards || "-"}
+              </div>
+              <div className="flex items-center content-center text-mobiles lg:text-xs ">
+                DESCRIPTION
+                {auth.logged && (
+                  <Edit
+                    className="w-3 ml-2 cursor-pointer pointer-events-auto"
+                    onClick={() => {
+                      setModal({
+                        show: true,
+                        action: "update",
+                        description: {
+                          id: desc?.ID || 0,
+                          lsgd: p.LSGD,
+                          district: p.DISTRICT,
+                          data: desc?.data || "",
+                        },
+                      });
+                    }}
+                  />
+                )}
+              </div>
+              <p className="w-24 pr-4 font-semibold break-all text-mobile lg:text-sm lg:w-48">
+                {desc?.data || "-"}
+              </p>
+            </div>
+          )}
         </div>
         {distStats(p.DISTRICT)}
       </div>
@@ -110,7 +131,7 @@ export default function Card({
     return (
       cardEnabled && (
         <div className="flex flex-col">
-          <div className="grid grid-flow-row-dense grid-flow-col-dense gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
+          <div className="grid grid-flow-col-dense gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
             <div
               className={`pointer-events-auto cursor-pointer bg-opacity-50 p-sm ${
                 dark ? "bg-black" : "bg-white"
@@ -140,7 +161,7 @@ export default function Card({
             </div>
           </div>
           {modeCard && (
-            <div className="grid grid-flow-row-dense grid-flow-col-dense grid-cols-none grid-rows-4 gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
+            <div className="grid grid-flow-col-dense grid-cols-none grid-rows-4 gap-1 mb-1 font-semibold leading-none text-center text-mobiles lg:text-sm">
               {modeCard === "STATS" &&
                 subControl([
                   "STATS_ACTIVE",
@@ -217,20 +238,16 @@ export default function Card({
                         </div>
                       ) : (
                         <div className="flex flex-col mb-2 uppercase">
-                          {Object.entries(lens).map((a, i) => (
-                            <div key={i}>
-                              <div
-                                className={`text-mobiles lg:text-xs ${
-                                  ZONE.COLOR_TEXT[a[0]]
-                                }`}
-                              >{`${
-                                a[0] == "CONTAINMENT" ? "LSGD" : "DISTRICTS"
-                              } IN ${a[0]}`}</div>
-                              <div className="font-semibold text-mobile lg:text-sm">
-                                {a[1]}
-                              </div>
+                          <div>
+                            <div
+                              className={`text-mobiles lg:text-xs ${ZONE.COLOR_TEXT.CONTAINMENT}`}
+                            >
+                              LSGDs IN CONTAINMENT
                             </div>
-                          ))}
+                            <div className="font-semibold text-mobile lg:text-sm">
+                              {zones.hotspots.length}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
@@ -247,12 +264,6 @@ export default function Card({
                         >
                           {`${geolocatedLoc.z} ZONE`}
                         </div>
-                        {/* <Link
-                        className="flex mt-0 uppercase pointer-events-auto text-mobiles"
-                        href={"/info#zone-" + geolocatedLoc.z.toLowerCase()}
-                      >
-                        Click here for more info
-                      </Link> */}
                       </div>
                       {info(geolocatedLoc.p, geolocatedLoc.z)}
                       <div

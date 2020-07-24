@@ -3,10 +3,28 @@ import ReactDOM from "react-dom";
 import { register } from "register-service-worker";
 import App from "./App";
 import "./assets/styles/tailwind.css";
+import { AuthProvider } from "./context/AuthContext";
+import { GeoProvider } from "./context/GeoContext";
+import { HoveredProvider } from "./context/HoveredContext";
+import { ModalProvider } from "./context/ModalContext";
+import { ModeProvider } from "./context/ModeContext";
+import { ThemeProvider } from "./context/ThemeContext";
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <AuthProvider>
+      <ThemeProvider>
+        <ModeProvider>
+          <GeoProvider>
+            <HoveredProvider>
+              <ModalProvider>
+                <App />
+              </ModalProvider>
+            </HoveredProvider>
+          </GeoProvider>
+        </ModeProvider>
+      </ThemeProvider>
+    </AuthProvider>
   </React.StrictMode>,
   document.getElementById("root")
 );

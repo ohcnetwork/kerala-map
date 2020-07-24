@@ -1,19 +1,26 @@
-import React, { useEffect, useState } from "react";
-import { Activity, ChevronDown, Moon, Sun } from "react-feather";
+import React, { useContext, useEffect, useState } from "react";
+import { Activity, ChevronDown, Moon, Sun, User } from "react-feather";
 import { hot } from "react-hot-loader";
 import MapBox from "./components/MapBox";
-import { getGeoJSONs, getKeralaStats } from "./requests";
+import Modal from "./components/Modal";
+import { AuthContext } from "./context/AuthContext";
+import { ModalContext } from "./context/ModalContext";
+import { ThemeContext } from "./context/ThemeContext";
+import { getDescriptions, getGeoJSONs, getKeralaStats } from "./requests";
 
 function App() {
-  const [dark, setdark] = useState(true);
+  const { auth, logout } = useContext(AuthContext);
+  const { dark, toggleDark } = useContext(ThemeContext);
+  const { modal, setModal } = useContext(ModalContext);
   const [stats, setStats] = useState({
     latest: {},
     summary: {},
     lastUpdated: "",
   });
   const [zones, setZones] = useState({ hotspots: [] });
-  const [fetched, setFetched] = useState(false);
+  const [descriptions, setDescriptions] = useState([]);
   const [geoJSONs, setGeoJSONs] = useState({ lsgd: null, district: null });
+  const [fetched, setFetched] = useState(false);
 
   useEffect(() => {
     if (!fetched) {
@@ -25,21 +32,36 @@ function App() {
             hotspots,
             lastUpdated,
           } = await getKeralaStats();
-          let { lsgd, district } = await getGeoJSONs();
-          setGeoJSONs({ lsgd: lsgd, district: district });
-          setZones({ hotspots: hotspots });
           setStats({
             latest: latest,
             summary: summary,
             lastUpdated: lastUpdated,
           });
+          setZones({ hotspots: hotspots });
+          let { lsgd, district } = await getGeoJSONs();
+          setGeoJSONs({ lsgd: lsgd, district: district });
+          let _d = await getDescriptions();
+          setDescriptions(_d);
           setFetched(true);
         } catch (error) {
-          console.log(error);
+          console.error(error);
         }
       })();
     }
   }, [fetched]);
+
+  useEffect(() => {
+    if (modal.action == "updateDone") {
+      (async () => {
+        try {
+          let _d = await getDescriptions();
+          setDescriptions(_d);
+        } catch (error) {
+          console.error(error);
+        }
+      })();
+    }
+  }, [modal.action]);
 
   return fetched ? (
     <div
@@ -47,6 +69,7 @@ function App() {
         dark ? "bg-dark-500" : "bg-light-500"
       }`}
     >
+      {modal.show && <Modal />}
       <div
         className={`flex flex-col fixed top-0 right-0 z-40 m-2 items-end uppercase fill-current ${
           dark ? "text-white" : "text-black"
@@ -67,6 +90,20 @@ function App() {
         </div>
         <div className="flex group text-mobiles">
           <div className="flex flex-col items-end mt-1 space-y-1 transition duration-150 ease-in-out origin-right transform scale-0 lg:w-full group-hover:scale-100">
+            <div
+              className="flex flex-row items-center cursor-pointer"
+              onClick={() => {
+                if (auth.logged) {
+                  logout();
+                  setModal({ ...modal, show: false });
+                  return;
+                }
+                setModal({ show: true, action: "login" });
+              }}
+            >
+              {auth.logged ? "Logout" : "Login"}
+              <User className="flex ml-1" size={"0.8rem"} />
+            </div>
             <a href="/">
               <div className="flex flex-row items-center cursor-pointer">
                 Map
@@ -82,7 +119,7 @@ function App() {
             {dark ? (
               <div
                 className="flex flex-row items-center cursor-pointer"
-                onClick={() => setdark(!dark)}
+                onClick={() => toggleDark()}
               >
                 Light
                 <Sun className="flex ml-1" size={"0.8rem"} />
@@ -90,7 +127,7 @@ function App() {
             ) : (
               <div
                 className="flex flex-row items-center cursor-pointer"
-                onClick={() => setdark(!dark)}
+                onClick={() => toggleDark()}
               >
                 Dark
                 <Moon className="flex ml-1" size={"0.8rem"} />
@@ -103,7 +140,12 @@ function App() {
           />
         </div>
       </div>
-      <MapBox stats={stats} zones={zones} dark={dark} geoJSONs={geoJSONs} />
+      <MapBox
+        stats={stats}
+        zones={zones}
+        geoJSONs={geoJSONs}
+        descriptions={descriptions}
+      />
     </div>
   ) : (
     <div

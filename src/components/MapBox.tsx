@@ -1,19 +1,19 @@
-import MapGL, {
-  Filter,
-  GeolocateControl,
-  Layer,
-  Source,
-} from "@urbica/react-map-gl";
-import React, { useEffect, useRef, useState } from "react";
-import { MAP, MODE, MODE_DEFAULT, STATS, ZONE } from "../constants";
+import MapGL, { Filter, GeolocateControl, Layer, Source } from "@urbica/react-map-gl";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { MAP, MODE, STATS, ZONE } from "../constants";
+import { GeoContext } from "../context/GeoContext";
+import { HoveredContext } from "../context/HoveredContext";
+import { ModeContext } from "../context/ModeContext";
+import { ThemeContext } from "../context/ThemeContext";
 import Card from "./Card";
 
-export default function MapBox({ dark, stats, zones, geoJSONs }) {
+export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
+  const { dark } = useContext(ThemeContext);
+  const { geolocatedLoc, setGeolocatedLoc } = useContext(GeoContext);
+  const { hoveredEntity, setHoveredEntity } = useContext(HoveredContext);
   const mapRef = useRef(null);
-  const [mode, setMode] = useState(MODE_DEFAULT);
+  const { mode } = useContext(ModeContext);
   const [clicked, setClicked] = useState(false);
-  const [hoveredEntity, setHoveredEntity] = useState(null);
-  const [geolocatedLoc, setGeolocatedLoc] = useState(null);
   const [viewport, setViewport] = useState({
     latitude: (MAP.MAXBOUNDS[0][1] + MAP.MAXBOUNDS[1][1]) / 2,
     longitude: (MAP.MAXBOUNDS[0][0] + MAP.MAXBOUNDS[1][0]) / 2,
@@ -152,7 +152,7 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
   };
 
   const onError = (error) => {
-    console.log("A geolocate event has occurred.", error);
+    console.error("A geolocate event has occurred.", error);
   };
 
   const GenLL = (s: string, label = true) => {
@@ -178,7 +178,7 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
             type="fill"
             source={s}
             paint={{
-              "fill-color": dark ? "#7e8080" : "#f5f5f5",
+              "fill-color": dark ? "#7e8080" : "#c4c4c4",
             }}
           />
         )}
@@ -283,16 +283,7 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
 
   return (
     <div className="flex flex-col min-w-full min-h-full lg:flex-row">
-      <Card
-        mode={mode}
-        setMode={setMode}
-        zones={zones}
-        stats={stats}
-        hoveredEntity={hoveredEntity}
-        dark={dark}
-        geolocatedLoc={geolocatedLoc}
-        setGeolocatedLoc={setGeolocatedLoc}
-      />
+      <Card zones={zones} stats={stats} descriptions={descriptions} />
       <div
         className="flex flex-grow w-full lg:w-5/6"
         style={{ minHeight: "90vh" }}
@@ -332,9 +323,37 @@ export default function MapBox({ dark, stats, zones, geoJSONs }) {
                 onLeave={onLeave}
                 onClick={onClick}
               />
+              <Layer
+                id="lsgd-not-hot"
+                type="fill"
+                source="lsgd"
+                paint={{
+                  "fill-color": ZONE.COLOR.CONTAINMENT,
+                  "fill-opacity": 0,
+                }}
+                onHover={onHover}
+                onLeave={onLeave}
+                onClick={onClick}
+              />
               <Filter
                 layerId="lsgd-hot"
-                filter={["in", "LSGD", ...lsgdHotspots]}
+                filter={[
+                  "in",
+                  "LSGD",
+                  ...lsgdHotspots,
+                  ...lsgdHotspots,
+                  ...descriptions.map((l) => l.lsgd),
+                ]}
+              />
+              <Filter
+                layerId="lsgd-not-hot"
+                filter={[
+                  "!in",
+                  "LSGD",
+                  ...lsgdHotspots,
+                  ...lsgdHotspots,
+                  ...descriptions.map((l) => l.lsgd),
+                ]}
               />
               <div>
                 {GenLL("lsgd")}
