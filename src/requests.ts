@@ -2,7 +2,7 @@ import axios from "axios";
 import geobuf from "geobuf";
 import Pbf from "pbf";
 
-const API_BASE_URL = process.env.API_BASE_URL || "";
+const API_BASE_URL = process.env.POI_APP_API_BASE_URL || "";
 
 export async function getKeralaStats() {
   try {
