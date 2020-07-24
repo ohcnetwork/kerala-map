@@ -80,6 +80,9 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
 
   const hotspotActive = (event) => {
     let f = event.features[0];
+    if (f.properties.DISTRICT == "") {
+      return;
+    }
     if (
       hoveredEntity === null ||
       (hoveredEntity && hoveredEntity.id !== f.id)
@@ -318,7 +321,7 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
         .map((j) => j.lsgd),
     [zones.hotspots, descriptions]
   );
-  
+
   const allwards = useMemo(
     () =>
       zones.hotspots.filter((i) => i.wards === "All Wards").map((j) => j.lsgd),
