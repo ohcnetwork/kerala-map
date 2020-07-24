@@ -113,27 +113,30 @@ function Modal() {
                 setModal({ ...modal, show: false });
                 return;
               }
+              let job: Promise<any>;
               if (d.id == 0) {
                 if (data.text) {
-                  createDescription(
+                  job = createDescription(
                     { district: d.district, lsgd: d.lsgd, data: data.text },
                     auth.token
-                  ).catch((e) => console.error(e));
+                  );
                 }
               } else {
                 if (data.text) {
-                  updateDescription(
+                  job = updateDescription(
                     d.id,
                     { data: data.text },
                     auth.token
-                  ).catch((e) => console.error(e));
-                } else {
-                  deleteDescription(d.id, auth.token).catch((e) =>
-                    console.error(e)
                   );
+                } else {
+                  job = deleteDescription(d.id, auth.token);
                 }
               }
-              setModal({ ...modal, show: false, action: "updateDone" });
+              job
+                .catch((e) => console.error(e))
+                .finally(() =>
+                  setModal({ ...modal, show: false, action: "updateDone" })
+                );
             })}
             className="w-16 bg-white"
           >
