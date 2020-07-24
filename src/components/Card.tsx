@@ -74,7 +74,7 @@ export default function Card({ stats, zones, descriptions }) {
                   (e) => e.lsgd === p.LSGD && e.district === p.DISTRICT
                 )?.wards || "-"}
               </div>
-              <div className="flex items-center content-center text-mobiles lg:text-xs ">
+              <div className="flex items-center content-center text-mobiles lg:text-xs">
                 DESCRIPTION
                 {auth.logged && (
                   <Edit
@@ -94,6 +94,7 @@ export default function Card({ stats, zones, descriptions }) {
                   />
                 )}
               </div>
+              <p className="leading-none text-mobile">Added by District Collector</p>
               <p className="w-24 pr-4 font-semibold break-all text-mobile lg:text-sm lg:w-48">
                 {desc?.data || "-"}
               </p>
