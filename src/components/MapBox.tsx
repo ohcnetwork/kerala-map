@@ -14,6 +14,37 @@ import { ThemeContext } from "../context/ThemeContext";
 import Card from "./Card";
 
 export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
+  const lsgd = useMemo(() => {
+    let _lsgd = geoJSONs.lsgd;
+    _lsgd.features = _lsgd.features.map((f) => {
+      f.properties = {
+        ...f.properties,
+        CONTAINMENT: 0,
+        ALERT: "",
+        WARDS: "",
+        ALERT_ID: 0,
+      };
+      for (const h of zones.hotspots) {
+        if (
+          h.lsgd === f.properties.LSGD &&
+          h.district === f.properties.DISTRICT
+        ) {
+          f.properties = { ...f.properties, CONTAINMENT: 1, WARDS: h.wards };
+        }
+      }
+      for (const d of descriptions) {
+        if (
+          d.lsgd === f.properties.LSGD &&
+          d.district === f.properties.DISTRICT
+        ) {
+          f.properties = { ...f.properties, ALERT: d.data, ALERT_ID: d.ID };
+        }
+      }
+      return f;
+    });
+    return _lsgd;
+  }, [zones.hotspots, descriptions]);
+
   const { dark } = useContext(ThemeContext);
   const { geolocatedLoc, setGeolocatedLoc } = useContext(GeoContext);
   const { hoveredEntity, setHoveredEntity } = useContext(HoveredContext);
@@ -35,6 +66,14 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
     home_obs: 0,
     hospital_today: 0,
   });
+
+  useEffect(() => {
+    const map = mapRef.current.getMap();
+    let src = map.getSource("lsgd");
+    if (map.getSource("lsgd")) {
+      map.getSource("lsgd").setData(lsgd);
+    }
+  }, [zones.hotspots, descriptions]);
 
   useEffect(() => {
     if (geolocatedLoc == null) {
@@ -90,7 +129,6 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
       setHoveredEntity({
         id: f.id,
         p: f.properties,
-        z: "CONTAINMENT",
       });
     }
   };
@@ -104,7 +142,6 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
       setHoveredEntity({
         id: f.properties.FID,
         p: f.properties,
-        z: "CONTAINMENT",
       });
     }
   };
@@ -277,60 +314,9 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
     return k * STATS.HEIGHT_MULTIPLIER;
   };
 
-  const inhotdesc = useMemo(
-    () =>
-      zones.hotspots
-        .filter((i) => {
-          for (const d of descriptions) {
-            if (i.lsgd === d.lsgd && i.district === d.district) {
-              return true;
-            }
-          }
-          return false;
-        })
-        .map((j) => j.lsgd),
-    [zones.hotspots, descriptions]
-  );
-
-  const inhotonly = useMemo(
-    () =>
-      zones.hotspots
-        .filter((i) => {
-          for (const d of descriptions) {
-            if (i.lsgd === d.lsgd && i.district === d.district) {
-              return false;
-            }
-          }
-          return true;
-        })
-        .map((j) => j.lsgd),
-    [zones.hotspots, descriptions]
-  );
-
-  const indesconly = useMemo(
-    () =>
-      descriptions
-        .filter((i) => {
-          for (const d of zones.hotspots) {
-            if (i.lsgd === d.lsgd && i.district === d.district) {
-              return false;
-            }
-          }
-          return true;
-        })
-        .map((j) => j.lsgd),
-    [zones.hotspots, descriptions]
-  );
-
-  const allwards = useMemo(
-    () =>
-      zones.hotspots.filter((i) => i.wards === "All Wards").map((j) => j.lsgd),
-    [zones.hotspots]
-  );
-
   return (
     <div className="flex flex-col min-w-full min-h-full lg:flex-row">
-      <Card zones={zones} stats={stats} descriptions={descriptions} />
+      <Card zones={zones} stats={stats} />
       <div
         className="flex flex-grow w-full lg:w-5/6"
         style={{ minHeight: "90vh" }}
@@ -349,7 +335,7 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
           ref={mapRef}
         >
           <Source id="district" type="geojson" data={geoJSONs.district} />
-          <Source id="lsgd" type="geojson" data={geoJSONs.lsgd} />
+          <Source id="lsgd" type="geojson" data={lsgd} />
           <Image
             id="all-ward"
             image={dark ? "/alert_black.png" : "/alert_white.png"}
@@ -363,109 +349,73 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
                 onError={onError}
               />
               <Layer
-                id="district-fill"
-                before="district-label"
-                type="fill"
-                source="district"
-                paint={{
-                  "fill-color": dark ? "#7e8080" : "#c4c4c4",
-                }}
-              />
-              <Layer
                 id="lsgd-hot-desc"
                 type="fill"
                 source="lsgd"
                 paint={{
-                  "fill-color": "#4f0808",
+                  "fill-color": [
+                    "case",
+                    [
+                      "all",
+                      ["==", ["get", "CONTAINMENT"], 1],
+                      ["!=", ["get", "ALERT_ID"], 0],
+                    ],
+                    "#4f0808",
+                    [
+                      "all",
+                      ["==", ["get", "CONTAINMENT"], 1],
+                      ["==", ["get", "ALERT_ID"], 0],
+                    ],
+                    ZONE.COLOR.CONTAINMENT,
+                    [
+                      "all",
+                      ["!=", ["get", "CONTAINMENT"], 1],
+                      ["!=", ["get", "ALERT_ID"], 0],
+                    ],
+                    "#e03434",
+                    dark ? "#7e8080" : "#c4c4c4",
+                  ],
                   "fill-opacity": 0.8,
                 }}
                 onHover={onHover}
                 onLeave={onLeave}
                 onClick={onClick}
               />
-              <Filter
-                layerId="lsgd-hot-desc"
-                filter={["in", "LSGD", ...inhotdesc]}
-              />
               <Layer
-                id="lsgd-hot"
-                type="fill"
+                before="lsgd-label"
+                id="lsgd-hot-all-ward"
+                type="symbol"
                 source="lsgd"
-                paint={{
-                  "fill-color": ZONE.COLOR.CONTAINMENT,
-                  "fill-opacity": 0.8,
+                layout={{
+                  "icon-allow-overlap": true,
+                  "icon-image": "all-ward",
+                  "icon-size": [
+                    "interpolate",
+                    ["linear"],
+                    ["zoom"],
+                    6,
+                    0,
+                    MAP.MAX_ZOOM,
+                    1,
+                  ],
+                  "icon-keep-upright": true,
                 }}
-                onHover={onHover}
-                onLeave={onLeave}
-                onClick={onClick}
-              />
-              <Filter
-                layerId="lsgd-hot"
-                filter={["in", "LSGD", ...inhotonly]}
-              />
-              <Layer
-                id="lsgd-desc"
-                type="fill"
-                source="lsgd"
                 paint={{
-                  "fill-color": "#e03434",
-                  "fill-opacity": 0.8,
+                  "icon-opacity": [
+                    "case",
+                    [
+                      "all",
+                      ["==", ["get", "CONTAINMENT"], 1],
+                      ["==", ["get", "WARDS"], "All Wards"],
+                    ],
+                    1,
+                    0,
+                  ],
+                  "icon-translate-anchor": "viewport",
                 }}
-                onHover={onHover}
-                onLeave={onLeave}
-                onClick={onClick}
-              />
-              <Filter
-                layerId="lsgd-desc"
-                filter={["in", "LSGD", ...indesconly]}
-              />
-              <Layer
-                id="lsgd-not-hot"
-                type="fill"
-                source="lsgd"
-                paint={{
-                  "fill-color": ZONE.COLOR.CONTAINMENT,
-                  "fill-opacity": 0,
-                }}
-                onHover={onHover}
-                onLeave={onLeave}
-                onClick={onClick}
-              />
-              <Filter
-                layerId="lsgd-not-hot"
-                filter={[
-                  "!in",
-                  "LSGD",
-                  ...inhotdesc,
-                  ...indesconly,
-                  ...inhotonly,
-                ]}
               />
               {GenLL("lsgd")}
               {GenLL("district")}
-              {viewport.zoom > 10 && (
-                <>
-                  <Layer
-                    before="lsgd-label"
-                    id="lsgd-hot-all-ward"
-                    type="symbol"
-                    source="lsgd"
-                    layout={{
-                      "icon-allow-overlap": true,
-                      "icon-image": "all-ward",
-                      "icon-size": 1,
-                      "icon-keep-upright": true,
-                    }}
-                    paint={{
-                      "icon-translate-anchor": "viewport",
-                    }}
-                  />
-                  <Filter
-                    layerId="lsgd-hot-all-ward"
-                    filter={["in", "LSGD", ...allwards]}
-                  />
-                </>
-              )}
             </div>
           )}
           {mode <= MODE.STATS_CONFIRMED && (

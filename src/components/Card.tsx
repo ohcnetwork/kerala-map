@@ -15,7 +15,7 @@ import { ModalContext } from "../context/ModalContext";
 import { ModeContext } from "../context/ModeContext";
 import { ThemeContext } from "../context/ThemeContext";
 
-export default function Card({ stats, zones, descriptions }) {
+export default function Card({ stats, zones }) {
   const { mode, setMode } = useContext(ModeContext);
   const { setModal } = useContext(ModalContext);
   const { dark } = useContext(ThemeContext);
@@ -49,10 +49,7 @@ export default function Card({ stats, zones, descriptions }) {
     ));
   };
 
-  const info = (p, z) => {
-    let desc = descriptions.find(
-      (e) => e.lsgd === p.LSGD && e.district === p.DISTRICT
-    );
+  const info = (p) => {
     return (
       <div className="flex flex-col mb-2 uppercase">
         <div className="mb-2">
@@ -68,14 +65,20 @@ export default function Card({ stats, zones, descriptions }) {
               <div className="font-semibold text-mobile lg:text-sm">
                 {p.LSGD}
               </div>
-              <div className="text-mobiles lg:text-xs">WARDS</div>
+              <div className="text-mobiles lg:text-xs">IN CONTAINMENT</div>
               <div className="font-semibold text-mobile lg:text-sm">
-                {zones.hotspots.find(
-                  (e) => e.lsgd === p.LSGD && e.district === p.DISTRICT
-                )?.wards || "-"}
+                {p.CONTAINMENT ? "YES" : "NO"}
               </div>
+              {p.CONTAINMENT != 0 && (
+                <>
+                  <div className="text-mobiles lg:text-xs">WARDS</div>
+                  <div className="font-semibold text-mobile lg:text-sm">
+                    {p.WARDS}
+                  </div>
+                </>
+              )}
               <div className="flex items-center content-center text-mobiles lg:text-xs">
-                DESCRIPTION
+                ALERTS
                 {auth.logged && (
                   <Edit
                     className="w-3 ml-2 cursor-pointer pointer-events-auto"
@@ -84,22 +87,25 @@ export default function Card({ stats, zones, descriptions }) {
                         show: true,
                         action: "update",
                         description: {
-                          id: desc?.ID || 0,
+                          id: p.ALERT_ID,
                           lsgd: p.LSGD,
                           district: p.DISTRICT,
-                          data: desc?.data || "",
+                          data: p.ALERT,
                         },
                       });
                     }}
                   />
                 )}
               </div>
-              <p className="leading-none text-mobile">Added by District Collector</p>
+              <p className="text-mobile">Added by District Collector</p>
               <p className="w-24 pr-4 font-semibold break-all text-mobile lg:text-sm lg:w-48">
-                {desc?.data || "-"}
+                {p.ALERT || "-"}
               </p>
             </div>
           )}
+        </div>
+        <div className="font-semibold text-mobiles lg:text-xs">
+          DISTRICT STATS
         </div>
         {distStats(p.DISTRICT)}
       </div>
@@ -232,7 +238,7 @@ export default function Card({ stats, zones, descriptions }) {
                     <div className="flex flex-col">
                       {hoveredEntity && hoveredEntity.p ? (
                         <div>
-                          {info(hoveredEntity.p, hoveredEntity.z)}
+                          {info(hoveredEntity.p)}
                           <div className="text-mobilexs lg:text-mobile">
                             Hover/select an area for detailed information.
                           </div>
@@ -243,7 +249,7 @@ export default function Card({ stats, zones, descriptions }) {
                             <div
                               className={`text-mobiles lg:text-xs ${ZONE.COLOR_TEXT.CONTAINMENT}`}
                             >
-                              LSGDs IN CONTAINMENT
+                              LSGD IN CONTAINMENT
                             </div>
                             <div className="font-semibold text-mobile lg:text-sm">
                               {zones.hotspots.length}
@@ -259,14 +265,12 @@ export default function Card({ stats, zones, descriptions }) {
                           You are in
                         </div>
                         <div
-                          className={`flex text-mobilel lg:text-base font-semibold ${
-                            ZONE.COLOR_TEXT[geolocatedLoc.z]
-                          }`}
+                          className={`flex text-mobilel lg:text-base font-semibold ${ZONE.COLOR_TEXT.CONTAINMENT}`}
                         >
-                          {`${geolocatedLoc.z} ZONE`}
+                          CONTAINMENT ZONE
                         </div>
                       </div>
-                      {info(geolocatedLoc.p, geolocatedLoc.z)}
+                      {info(geolocatedLoc.p)}
                       <div
                         className="uppercase cursor-pointer pointer-events-auto text-mobilexs lg:text-mobiles"
                         onClick={() => setGeolocatedLoc(null)}
@@ -281,7 +285,7 @@ export default function Card({ stats, zones, descriptions }) {
                 <div className="flex flex-col">
                   {header()}
                   {hoveredEntity && hoveredEntity.p ? (
-                    info(hoveredEntity.p, hoveredEntity.z)
+                    info(hoveredEntity.p)
                   ) : (
                     <div className="flex flex-col mb-2 uppercase">
                       {statsinfo()}
