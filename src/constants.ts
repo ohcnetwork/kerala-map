@@ -1,9 +1,10 @@
 export const MAP = {
   ACCESS_TOKEN: process.env.POI_APP_MAPBOX_ACCESS_TOKEN,
-  MAX_ZOOM: 11.824974653320604,
+  INIT_ZOOM: 6.8,
+  MAX_ZOOM: 14,
   LINE: {
-    DISTRICT: { DARK: "#484A4A", LIGHT: "#FFFFFF" },
-    LSGD: { DARK: "#5F6060", LIGHT: "#FFFFFF" },
+    DARK: "#949494",
+    LIGHT: "#757575",
   },
   MAXBOUNDS: [
     [71.05, 8.12],
@@ -16,12 +17,12 @@ export const MAP = {
 };
 
 export const ZONE = {
-  COLOR: {
-    CONTAINMENT: "#c21313",
-  },
-  COLOR_TEXT: {
-    CONTAINMENT: "text-red-700",
-  },
+  COLOR: "#c21313",
+  COLOR_MARKED: "#c9c900",
+  COLOR_MARKED_HOT: "#4f0808",
+  COLOR_NONE_LIGHT: "#c4c4c4",
+  COLOR_NONE_DARK: "#7e8080",
+  COLOR_TEXT: "text-red-700",
   HEIGHT_MULTIPLIER: 2,
 };
 

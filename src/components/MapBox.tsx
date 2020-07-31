@@ -54,7 +54,7 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
   const [viewport, setViewport] = useState({
     latitude: (MAP.MAXBOUNDS[0][1] + MAP.MAXBOUNDS[1][1]) / 2,
     longitude: (MAP.MAXBOUNDS[0][0] + MAP.MAXBOUNDS[1][0]) / 2,
-    zoom: 1,
+    zoom: MAP.INIT_ZOOM,
   });
   const [statsMax, setStatsMax] = useState({
     active: 0,
@@ -208,10 +208,16 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
           type="line"
           source={s}
           paint={{
-            "line-color": dark
-              ? MAP.LINE[s.toUpperCase()].DARK
-              : MAP.LINE[s.toUpperCase()].LIGHT,
-            "line-width": s === "district" ? 2 : 1,
+            "line-color": dark ? MAP.LINE.DARK : MAP.LINE.LIGHT,
+            "line-width": [
+              "interpolate",
+              ["cubic-bezier", 0.68, 0.03, 0.2, 0.72],
+              ["zoom"],
+              MAP.INIT_ZOOM,
+              s === "district" ? 1 : 0.1,
+              MAP.MAX_ZOOM,
+              s === "district" ? 5 : 1,
+            ],
             "line-translate-anchor": "viewport",
           }}
         />
@@ -223,6 +229,7 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
             paint={{
               "text-color": dark ? "white" : "black",
               "text-translate-anchor": "viewport",
+              "text-opacity": ["step", ["zoom"], s == "district" ? 1 : 0, 9, 1],
             }}
             layout={{
               "text-field": ["get", s.toUpperCase()],
@@ -360,22 +367,22 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
                       ["==", ["get", "CONTAINMENT"], 1],
                       ["!=", ["get", "ALERT_ID"], 0],
                     ],
-                    "#4f0808",
+                    ZONE.COLOR_MARKED_HOT,
                     [
                       "all",
                       ["==", ["get", "CONTAINMENT"], 1],
                       ["==", ["get", "ALERT_ID"], 0],
                     ],
-                    ZONE.COLOR.CONTAINMENT,
+                    ZONE.COLOR,
                     [
                       "all",
                       ["!=", ["get", "CONTAINMENT"], 1],
                       ["!=", ["get", "ALERT_ID"], 0],
                     ],
-                    "#e03434",
-                    dark ? "#7e8080" : "#c4c4c4",
+                    ZONE.COLOR_MARKED,
+                    dark ? ZONE.COLOR_NONE_DARK : ZONE.COLOR_NONE_LIGHT,
                   ],
-                  "fill-opacity": 0.8,
+                  "fill-opacity": 0.2,
                 }}
                 onHover={onHover}
                 onLeave={onLeave}
@@ -393,7 +400,7 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
                     "interpolate",
                     ["linear"],
                     ["zoom"],
-                    6,
+                    MAP.INIT_ZOOM,
                     0,
                     MAP.MAX_ZOOM,
                     1,

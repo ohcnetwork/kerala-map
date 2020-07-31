@@ -247,7 +247,7 @@ export default function Card({ stats, zones }) {
                         <div className="flex flex-col mb-2 uppercase">
                           <div>
                             <div
-                              className={`text-mobiles lg:text-xs ${ZONE.COLOR_TEXT.CONTAINMENT}`}
+                              className={`text-mobiles lg:text-xs ${ZONE.COLOR_TEXT}`}
                             >
                               LSGD IN CONTAINMENT
                             </div>
@@ -265,7 +265,7 @@ export default function Card({ stats, zones }) {
                           You are in
                         </div>
                         <div
-                          className={`flex text-mobilel lg:text-base font-semibold ${ZONE.COLOR_TEXT.CONTAINMENT}`}
+                          className={`flex text-mobilel lg:text-base font-semibold ${ZONE.COLOR_TEXT}`}
                         >
                           CONTAINMENT ZONE
                         </div>
