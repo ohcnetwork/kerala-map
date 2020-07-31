@@ -6,7 +6,12 @@ module.exports = {
     },
     {
       resolve: "@poi/plugin-pwa",
-      options: {},
+      options: {
+        workboxOptions: {
+          clientsClaim: true,
+          skipWaiting: true,
+        },
+      },
     },
   ],
   devServer: {
