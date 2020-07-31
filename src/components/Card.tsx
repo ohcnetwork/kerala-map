@@ -265,9 +265,15 @@ export default function Card({ stats, zones }) {
                           You are in
                         </div>
                         <div
-                          className={`flex text-mobilel lg:text-base font-semibold ${ZONE.COLOR_TEXT}`}
+                          className={`flex text-mobilel lg:text-base font-semibold ${
+                            geolocatedLoc.p.CONTAINMENT
+                              ? ZONE.COLOR_TEXT
+                              : "text-green-700"
+                          }`}
                         >
-                          CONTAINMENT ZONE
+                          {geolocatedLoc.p.CONTAINMENT
+                            ? "CONTAINMENT ZONE"
+                            : "NON-CONTAINMENT ZONE"}
                         </div>
                       </div>
                       {info(geolocatedLoc.p)}

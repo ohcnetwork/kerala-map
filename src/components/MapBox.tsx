@@ -184,13 +184,13 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
       if (!_f) {
         return;
       }
-      const f = _f.find((e) => e.layer.id === "lsgd-hot");
-      if (!f) {
+      const f = _f.find((e) => e.layer.id === "lsgd-hot-desc");
+      if (f == undefined) {
+        setGeolocatedLoc(null);
         return;
       }
       setGeolocatedLoc({
         p: f.properties,
-        z: "CONTAINMENT",
       });
     }
   };
