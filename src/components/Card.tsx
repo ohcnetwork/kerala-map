@@ -77,7 +77,7 @@ export default function Card({ stats, zones }) {
                   </div>
                 </>
               )}
-              <div className="flex items-center content-center text-mobiles lg:text-xs">
+              <div className="flex items-center content-center mt-2 text-mobiles lg:text-xs">
                 ALERTS
                 {auth.logged && (
                   <Edit
