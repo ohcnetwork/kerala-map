@@ -3,10 +3,16 @@ import { Activity, ChevronDown, Moon, Sun, User } from "react-feather";
 import { hot } from "react-hot-loader";
 import MapBox from "./components/MapBox";
 import Modal from "./components/Modal";
+import { MODAL_ACTION } from "./constants";
 import { AuthContext } from "./context/AuthContext";
 import { ModalContext } from "./context/ModalContext";
 import { ThemeContext } from "./context/ThemeContext";
-import { getDescriptions, getGeoJSONs, getKeralaStats } from "./requests";
+import {
+  getDescriptions,
+  getFeatures,
+  getGeoJSONs,
+  getKeralaStats,
+} from "./requests";
 
 function App() {
   const { auth, logout } = useContext(AuthContext);
@@ -19,6 +25,7 @@ function App() {
   });
   const [zones, setZones] = useState({ hotspots: [] });
   const [descriptions, setDescriptions] = useState([]);
+  const [features, setFeatures] = useState([]);
   const [geoJSONs, setGeoJSONs] = useState({ lsgd: null, district: null });
   const [fetched, setFetched] = useState(false);
 
@@ -42,6 +49,8 @@ function App() {
           setGeoJSONs({ lsgd: lsgd, district: district });
           let _d = await getDescriptions();
           setDescriptions(_d);
+          let _f = await getFeatures();
+          setFeatures(_f);
           setFetched(true);
         } catch (error) {
           console.error(error);
@@ -51,16 +60,24 @@ function App() {
   }, [fetched]);
 
   useEffect(() => {
-    if (modal.action == "updateDone") {
-      (async () => {
+    (async () => {
+      if (modal.action == MODAL_ACTION.DESC_UPDATE_DONE) {
         try {
           let _d = await getDescriptions();
           setDescriptions(_d);
         } catch (error) {
           console.error(error);
         }
-      })();
-    }
+      }
+      if (modal.action == MODAL_ACTION.FEATURE_UPDATE_DONE) {
+        try {
+          let _f = await getFeatures();
+          setFeatures(_f);
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    })();
   }, [modal.action]);
 
   return fetched ? (
@@ -98,7 +115,7 @@ function App() {
                   setModal({ ...modal, show: false });
                   return;
                 }
-                setModal({ show: true, action: "login" });
+                setModal({ show: true, action: MODAL_ACTION.LOGIN });
               }}
             >
               {auth.logged ? "Logout" : "Login"}
@@ -145,6 +162,7 @@ function App() {
         zones={zones}
         geoJSONs={geoJSONs}
         descriptions={descriptions}
+        features={features}
       />
     </div>
   ) : (

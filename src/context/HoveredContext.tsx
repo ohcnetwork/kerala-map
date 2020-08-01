@@ -3,7 +3,10 @@ import React, { useMemo, useState } from "react";
 export const HoveredContext = React.createContext(null);
 
 export const HoveredProvider = ({ children }) => {
-  const [hoveredEntity, setHoveredEntity] = useState(null);
+  const [hoveredEntity, setHoveredEntity] = useState({
+    p: null,
+    f: [],
+  });
 
   const value = useMemo(
     () => ({

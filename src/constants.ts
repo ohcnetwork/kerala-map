@@ -16,6 +16,15 @@ export const MAP = {
   },
 };
 
+export const MODAL_ACTION = {
+  LOGIN: "login",
+  DESC_UPDATE: "desc_update",
+  DESC_UPDATE_DONE: "desc_update_done",
+  FEATURE_UPDATE: "feature_update",
+  FEATURE_DELETE: "feature_delete",
+  FEATURE_UPDATE_DONE: "feature_update_done",
+};
+
 export const ZONE = {
   COLOR: "#c21313",
   COLOR_MARKED: "#c9c900",
@@ -71,6 +80,28 @@ export const MODE = {
   STATS_CONFIRMED: 7,
   CONTAINMENT: 8,
 };
+
+export const STATS_MODE_MAP = [
+  [MODE.STATS_ACTIVE, "active"],
+  [MODE.STATS_DEATH, "confirmed"],
+  [MODE.STATS_RECOVERED, "recovered"],
+  [MODE.STATS_TOTAL_OBS, "total_obs"],
+  [MODE.STATS_HOSOBS, "hospital_obs"],
+  [MODE.STATS_HOME_OBS, "home_obs"],
+  [MODE.STATS_HOSTODAY, "hospital_today"],
+  [MODE.STATS_CONFIRMED, "confirmed"],
+];
+
+export const STATS_COLOR_MODE_MAP = [
+  [MODE.STATS_ACTIVE, "#E53E3E"],
+  [MODE.STATS_DEATH, "#718096"],
+  [MODE.STATS_RECOVERED, "#38A169"],
+  [MODE.STATS_TOTAL_OBS, "#D69E2E"],
+  [MODE.STATS_HOSOBS, "#D69E2E"],
+  [MODE.STATS_HOME_OBS, "#D69E2E"],
+  [MODE.STATS_HOSTODAY, "#D69E2E"],
+  [MODE.STATS_CONFIRMED, "#D69E2E"],
+];
 
 export const MODE_BUTTON = [
   [MODE.STATS_ACTIVE, "ACTIVE"],

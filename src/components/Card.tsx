@@ -1,6 +1,7 @@
 import React, { useContext, useState } from "react";
-import { Edit, Plus } from "react-feather";
+import { Edit3, Eye, EyeOff, Plus, X } from "react-feather";
 import {
+  MODAL_ACTION,
   MODE,
   MODE_BUTTON,
   MODE_LANG,
@@ -15,7 +16,15 @@ import { ModalContext } from "../context/ModalContext";
 import { ModeContext } from "../context/ModeContext";
 import { ThemeContext } from "../context/ThemeContext";
 
-export default function Card({ stats, zones }) {
+export default function Card({
+  stats,
+  zones,
+  draw,
+  descriptions,
+  features,
+  featuresEnabled,
+  setFeaturesEnabled,
+}) {
   const { mode, setMode } = useContext(ModeContext);
   const { setModal } = useContext(ModalContext);
   const { dark } = useContext(ThemeContext);
@@ -27,87 +36,142 @@ export default function Card({ stats, zones }) {
   const [modeCard, setModeCard] = useState("");
   const [controlTip, setControlTip] = useState("");
 
-  const distStats = (d) => {
-    return Object.keys(STATS.LANG).map((a, i) => (
-      <div key={i}>
-        <div className="text-mobiles lg:text-xs">{STATS.LANG[a]}</div>
-        <div className="font-semibold text-mobile lg:text-sm">
-          {stats.latest[d][a]}
-        </div>
-      </div>
-    ));
-  };
-
-  const statsinfo = () => {
-    return Object.keys(STATS.LANG).map((a, i) => (
-      <div key={i}>
-        <div className="text-mobiles lg:text-xs">{STATS.LANG[a]}</div>
-        <div className="font-semibold text-mobile lg:text-sm">
-          {stats.summary[a]}
-        </div>
-      </div>
-    ));
-  };
-
-  const info = (p) => {
+  const statsinfo = (district = null) => {
     return (
-      <div className="flex flex-col mb-2 uppercase">
-        <div className="mb-2">
+      <div className="mb-2 uppercase">
+        {district && (
           <div>
             <div className="text-mobiles lg:text-xs">DISTRICT</div>
             <div className="font-semibold text-mobile lg:text-sm">
-              {p.DISTRICT}
+              {district}
             </div>
           </div>
-          {p.LSGD && (
-            <div>
-              <div className="text-mobiles lg:text-xs">LSGD</div>
-              <div className="font-semibold text-mobile lg:text-sm">
-                {p.LSGD}
-              </div>
-              <div className="text-mobiles lg:text-xs">IN CONTAINMENT</div>
-              <div className="font-semibold text-mobile lg:text-sm">
-                {p.CONTAINMENT ? "YES" : "NO"}
-              </div>
-              {p.CONTAINMENT != 0 && (
-                <>
-                  <div className="text-mobiles lg:text-xs">WARDS</div>
-                  <div className="font-semibold text-mobile lg:text-sm">
-                    {p.WARDS}
-                  </div>
-                </>
+        )}
+        {Object.keys(STATS.LANG).map((a, i) => (
+          <div key={i}>
+            <div className="text-mobiles lg:text-xs">{STATS.LANG[a]}</div>
+            <div className="font-semibold text-mobile lg:text-sm">
+              {district ? stats.latest[district][a] : stats.summary[a]}
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
+  const lsgdinfo = (p) => {
+    let a = descriptions.find(
+      (e) =>
+        e.ID === p.ALERT_ID || (e.lsgd === p.LSGD && e.district === p.DISTRICT)
+    );
+    return (
+      <div className="flex flex-col mb-2 uppercase">
+        <div>
+          <div className="text-mobiles lg:text-xs">DISTRICT</div>
+          <div className="font-semibold text-mobile lg:text-sm">
+            {p.DISTRICT}
+          </div>
+        </div>
+        {p.LSGD && (
+          <div>
+            <div className="text-mobiles lg:text-xs">LSGD</div>
+            <div className="font-semibold text-mobile lg:text-sm">{p.LSGD}</div>
+            <div className="text-mobiles lg:text-xs">IN CONTAINMENT</div>
+            <div
+              className={`font-semibold text-mobile lg:text-sm ${
+                p.CONTAINMENT ? ZONE.COLOR_TEXT : ""
+              }`}
+            >
+              {p.CONTAINMENT ? "YES" : "NO"}
+            </div>
+            {p.CONTAINMENT != 0 && (
+              <>
+                <div className="text-mobiles lg:text-xs">WARDS</div>
+                <div className="font-semibold text-mobile lg:text-sm">
+                  {p.WARDS}
+                </div>
+              </>
+            )}
+            <div className="flex items-center content-center mt-2 text-mobiles lg:text-xs">
+              ALERTS
+              {auth.logged && (
+                <Edit3
+                  className="w-3 ml-2 cursor-pointer pointer-events-auto"
+                  onClick={() => {
+                    setModal({
+                      show: true,
+                      action: MODAL_ACTION.DESC_UPDATE,
+                      payload: {
+                        id: a?.ID || 0,
+                        lsgd: p.LSGD,
+                        district: p.DISTRICT,
+                        data: a?.data || "",
+                      },
+                    });
+                  }}
+                />
               )}
-              <div className="flex items-center content-center mt-2 text-mobiles lg:text-xs">
-                ALERTS
+            </div>
+            <p className="w-24 pr-4 font-semibold break-all text-mobile lg:text-sm lg:w-48">
+              {a?.data || "-"}
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const featureinfo = (fs) => {
+    return (
+      <div className="flex flex-col mb-2 uppercase">
+        <div className="flex items-center content-center text-mobiles lg:text-xs">
+          REGIONS
+          {featuresEnabled ? (
+            <EyeOff
+              className="w-3 ml-2 cursor-pointer pointer-events-auto"
+              onClick={() => {
+                setFeaturesEnabled(false);
+              }}
+            />
+          ) : (
+            <Eye
+              className="w-3 ml-2 cursor-pointer pointer-events-auto"
+              onClick={() => {
+                setFeaturesEnabled(true);
+              }}
+            />
+          )}
+          {auth.logged && (
+            <Plus
+              className="w-3 ml-2 cursor-pointer pointer-events-auto"
+              onClick={() => {
+                draw.changeMode("draw_polygon");
+              }}
+            />
+          )}
+        </div>
+        {fs.length === 0 ? (
+          <div className="font-semibold text-mobile lg:text-sm">-</div>
+        ) : (
+          fs.map((f, i) => {
+            return (
+              <div
+                key={i}
+                className="flex items-center content-center font-semibold text-mobile lg:text-sm"
+              >
                 {auth.logged && (
-                  <Edit
-                    className="w-3 ml-2 cursor-pointer pointer-events-auto"
+                  <X
+                    className="w-3 mr-2 cursor-pointer pointer-events-auto"
                     onClick={() => {
-                      setModal({
-                        show: true,
-                        action: "update",
-                        description: {
-                          id: p.ALERT_ID,
-                          lsgd: p.LSGD,
-                          district: p.DISTRICT,
-                          data: p.ALERT,
-                        },
-                      });
+                      draw.trash();
                     }}
                   />
                 )}
+                {`${i + 1}. ${f.properties.FEATURE_DESC}`}
               </div>
-              <p className="text-mobile">Added by District Collector</p>
-              <p className="w-24 pr-4 font-semibold break-all text-mobile lg:text-sm lg:w-48">
-                {p.ALERT || "-"}
-              </p>
-            </div>
-          )}
-        </div>
-        <div className="font-semibold text-mobiles lg:text-xs">
-          DISTRICT STATS
-        </div>
-        {distStats(p.DISTRICT)}
+            );
+          })
+        )}
       </div>
     );
   };
@@ -236,27 +300,35 @@ export default function Card({ stats, zones }) {
                   {header()}
                   {!geolocatedLoc ? (
                     <div className="flex flex-col">
-                      {hoveredEntity && hoveredEntity.p ? (
-                        <div>
-                          {info(hoveredEntity.p)}
-                          <div className="text-mobilexs lg:text-mobile">
-                            Hover/select an area for detailed information.
-                          </div>
-                        </div>
+                      {hoveredEntity.p ? (
+                        lsgdinfo(hoveredEntity.p.properties)
                       ) : (
                         <div className="flex flex-col mb-2 uppercase">
-                          <div>
-                            <div
-                              className={`text-mobiles lg:text-xs ${ZONE.COLOR_TEXT}`}
-                            >
-                              LSGD IN CONTAINMENT
-                            </div>
-                            <div className="font-semibold text-mobile lg:text-sm">
-                              {zones.hotspots.length}
-                            </div>
+                          <div
+                            className={`text-mobiles lg:text-xs ${ZONE.COLOR_TEXT}`}
+                          >
+                            LSGD IN CONTAINMENT
+                          </div>
+                          <div className="font-semibold text-mobile lg:text-sm">
+                            {zones.hotspots.length}
                           </div>
                         </div>
                       )}
+                      {featureinfo(
+                        hoveredEntity.f.reduce((a, c) => {
+                          let f = features.find((item) => item.id === c.id);
+                          if (f) {
+                            a.push(f);
+                          }
+                          return a;
+                        }, [])
+                      )}
+                      <div className="mb-1 text-mobilexs lg:text-mobile">
+                        ALERTS and REGIONS are added by District Collector.
+                      </div>
+                      <div className="text-mobilexs lg:text-mobile">
+                        Hover/select an area for detailed information.
+                      </div>
                     </div>
                   ) : (
                     <div className="flex flex-col">
@@ -276,7 +348,7 @@ export default function Card({ stats, zones }) {
                             : "NON-CONTAINMENT ZONE"}
                         </div>
                       </div>
-                      {info(geolocatedLoc.p)}
+                      {lsgdinfo(geolocatedLoc.p)}
                       <div
                         className="uppercase cursor-pointer pointer-events-auto text-mobilexs lg:text-mobiles"
                         onClick={() => setGeolocatedLoc(null)}
@@ -290,13 +362,9 @@ export default function Card({ stats, zones }) {
               {mode <= MODE.STATS_CONFIRMED && (
                 <div className="flex flex-col">
                   {header()}
-                  {hoveredEntity && hoveredEntity.p ? (
-                    info(hoveredEntity.p)
-                  ) : (
-                    <div className="flex flex-col mb-2 uppercase">
-                      {statsinfo()}
-                    </div>
-                  )}
+                  {hoveredEntity && hoveredEntity.p
+                    ? statsinfo(hoveredEntity.p.properties.DISTRICT)
+                    : statsinfo()}
                   <div className="text-mobilexs lg:text-mobile">
                     Hover/select a point for detailed information.
                   </div>

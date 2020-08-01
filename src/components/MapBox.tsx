@@ -1,19 +1,34 @@
-import MapGL, {
-  Filter,
-  GeolocateControl,
-  Image,
-  Layer,
-  Source,
-} from "@urbica/react-map-gl";
+import MapboxDraw from "@mapbox/mapbox-gl-draw";
+import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
+import MapGL, { GeolocateControl, Image, Layer, Source } from "@urbica/react-map-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MAP, MODE, STATS, ZONE } from "../constants";
+import { MAP, MODAL_ACTION, MODE, STATS, STATS_COLOR_MODE_MAP, STATS_MODE_MAP, ZONE } from "../constants";
+import { AuthContext } from "../context/AuthContext";
 import { GeoContext } from "../context/GeoContext";
 import { HoveredContext } from "../context/HoveredContext";
+import { ModalContext } from "../context/ModalContext";
 import { ModeContext } from "../context/ModeContext";
 import { ThemeContext } from "../context/ThemeContext";
 import Card from "./Card";
 
-export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
+const modes = MapboxDraw.modes;
+modes.static_mode = {};
+modes.static_mode.onSetup = function() {
+  this.setActionableState();
+  return {};
+};
+modes.static_mode.toDisplayFeatures = function(state, geojson, display) {
+  display(geojson);
+};
+
+export default function MapBox({
+  stats,
+  zones,
+  geoJSONs,
+  descriptions,
+  features,
+}) {
   const lsgd = useMemo(() => {
     let _lsgd = geoJSONs.lsgd;
     _lsgd.features = _lsgd.features.map((f) => {
@@ -45,12 +60,37 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
     return _lsgd;
   }, [zones.hotspots, descriptions]);
 
+  const district = useMemo(() => {
+    let _district = geoJSONs.district;
+    _district.features = _district.features.reduce((p, f) => {
+      if (f.properties.DISTRICT != "Mahe") {
+        f.properties = {
+          ...f.properties,
+          active: stats.latest[f.properties.DISTRICT].active,
+          confirmed: stats.latest[f.properties.DISTRICT].confirmed,
+          deceased: stats.latest[f.properties.DISTRICT].deceased,
+          recovered: stats.latest[f.properties.DISTRICT].recovered,
+          total_obs: stats.latest[f.properties.DISTRICT].total_obs,
+          hospital_obs: stats.latest[f.properties.DISTRICT].hospital_obs,
+          home_obs: stats.latest[f.properties.DISTRICT].home_obs,
+          hospital_today: stats.latest[f.properties.DISTRICT].hospital_today,
+        };
+        p.push(f);
+      }
+      return p;
+    }, []);
+    return _district;
+  }, [stats]);
+
   const { dark } = useContext(ThemeContext);
   const { geolocatedLoc, setGeolocatedLoc } = useContext(GeoContext);
-  const { hoveredEntity, setHoveredEntity } = useContext(HoveredContext);
+  const { setHoveredEntity } = useContext(HoveredContext);
+  const { auth } = useContext(AuthContext);
   const mapRef = useRef(null);
   const { mode } = useContext(ModeContext);
-  const [clicked, setClicked] = useState(false);
+  const { setModal } = useContext(ModalContext);
+  const [draw, setDraw] = useState(null);
+  const [featuresEnabled, setFeaturesEnabled] = useState(false);
   const [viewport, setViewport] = useState({
     latitude: (MAP.MAXBOUNDS[0][1] + MAP.MAXBOUNDS[1][1]) / 2,
     longitude: (MAP.MAXBOUNDS[0][0] + MAP.MAXBOUNDS[1][0]) / 2,
@@ -66,12 +106,11 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
     home_obs: 0,
     hospital_today: 0,
   });
-
   useEffect(() => {
     const map = mapRef.current.getMap();
     let src = map.getSource("lsgd");
-    if (map.getSource("lsgd")) {
-      map.getSource("lsgd").setData(lsgd);
+    if (src) {
+      src.setData(lsgd);
     }
   }, [zones.hotspots, descriptions]);
 
@@ -85,6 +124,14 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
       e && e.remove();
     }
   }, [geolocatedLoc]);
+
+  useEffect(() => {
+    if (draw) {
+      auth.logged
+        ? draw.changeMode("simple_select")
+        : draw.changeMode("static_mode");
+    }
+  }, [auth.logged, draw]);
 
   useEffect(() => {
     let active = 0;
@@ -115,66 +162,112 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
       home_obs: home_obs,
       hospital_today: hospital_today,
     });
+    const map = mapRef.current.getMap();
+    let _draw = new MapboxDraw({
+      modes: modes,
+      controls: {
+        point: false,
+        line_string: false,
+        polygon: false,
+        trash: false,
+        combine_features: false,
+        uncombine_features: false,
+      },
+    });
+    map.addControl(_draw, "bottom-right");
+    map.on("draw.create", (event) => {
+      setModal({
+        show: true,
+        action: MODAL_ACTION.FEATURE_UPDATE,
+        payload: {
+          id: 0,
+          data: JSON.stringify(event.features[0]),
+          description: "",
+        },
+      });
+    });
+    map.on("draw.delete", (event) => {
+      {
+        setModal({
+          show: true,
+          action: MODAL_ACTION.FEATURE_DELETE,
+          payload: {
+            id: event.features[0].properties.FEATURE_ID,
+          },
+        });
+      }
+    });
+    map.on("draw.update", (event) => {
+      setModal({
+        show: true,
+        action: MODAL_ACTION.FEATURE_UPDATE,
+        payload: {
+          id: event.features[0].properties.FEATURE_ID,
+          data: JSON.stringify(event.features[0]),
+          description: event.features[0].properties.FEATURE_DESC,
+        },
+      });
+    });
+    map.on("click", (e) => {
+      let f = map.queryRenderedFeatures(e.point);
+      let displayProperties = [
+        "type",
+        "properties",
+        "id",
+        "layer",
+        "source",
+        "sourceLayer",
+        "state",
+      ];
+      let displayFeatures = f
+        .filter((feat) =>
+          [
+            "district-stats",
+            "lsgd-hot-desc",
+            "gl-draw-polygon-fill-active.cold",
+            "gl-draw-polygon-fill-inactive.cold",
+          ].includes(feat.layer.id)
+        )
+        .map((feat) => {
+          let displayFeat = {};
+          displayProperties.forEach((prop) => {
+            displayFeat[prop] = feat[prop];
+          });
+          return displayFeat;
+        });
+      let q = {
+        p:
+          displayFeatures.filter(
+            (feat) =>
+              feat.layer.id === "lsgd-hot-desc" ||
+              feat.layer.id === "district-stats"
+          )[0] || null,
+        f: displayFeatures
+          .filter((feat) =>
+            [
+              "gl-draw-polygon-fill-active.cold",
+              "gl-draw-polygon-fill-inactive.cold",
+            ].includes(feat.layer.id)
+          )
+          .map((feat) =>
+            _draw
+              .getAll()
+              .features.find((item) => item.id === feat.properties.id)
+          ),
+      };
+      setHoveredEntity(q);
+    });
+    setDraw(_draw);
   }, []);
 
-  const hotspotActive = (event) => {
-    let f = event.features[0];
-    if (f.properties.DISTRICT == "") {
-      return;
-    }
-    if (
-      hoveredEntity === null ||
-      (hoveredEntity && hoveredEntity.id !== f.id)
-    ) {
-      setHoveredEntity({
-        id: f.id,
-        p: f.properties,
+  useEffect(() => {
+    if (draw) {
+      draw.set({
+        type: "FeatureCollection",
+        features: mode === MODE.CONTAINMENT && featuresEnabled ? features : [],
       });
     }
-  };
-
-  const statsActive = (event) => {
-    let f = event.features[0];
-    if (
-      hoveredEntity === null ||
-      (hoveredEntity && hoveredEntity.id !== f.properties.FID)
-    ) {
-      setHoveredEntity({
-        id: f.properties.FID,
-        p: f.properties,
-      });
-    }
-  };
-
-  const _setHoveredEntity = (event) => {
-    if (mode <= MODE.STATS_CONFIRMED) {
-      statsActive(event);
-    } else {
-      hotspotActive(event);
-    }
-  };
-
-  const onClick = (event) => {
-    if (event.features && event.features.length > 0) {
-      _setHoveredEntity(event);
-      setClicked(true);
-    } else {
-      setClicked(false);
-      setHoveredEntity(null);
-    }
-  };
-
-  const onHover = (event) => {
-    if (event.features && event.features.length > 0 && !clicked) {
-      _setHoveredEntity(event);
-    }
-  };
-
-  const onLeave = () => {
-    if (hoveredEntity && !clicked) {
-      setHoveredEntity(null);
-    }
-  };
+  }, [draw, features, mode, featuresEnabled]);
 
   const onGeolocate = (data) => {
     if (mapRef) {
@@ -243,87 +336,17 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
     );
   };
 
-  const statsInterpolate = (key: string) => {
-    let a = 0;
-    let c = "";
-    let k = null;
-    if (mode === MODE.STATS_ACTIVE) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].active))
-      );
-      c = STATS.COLOR.ACTIVE;
-      k = stats.latest[key].active;
-    } else if (mode === MODE.STATS_CONFIRMED) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].confirmed))
-      );
-      c = STATS.COLOR.CONFIRMED;
-      k = stats.latest[key].confirmed;
-    } else if (mode === MODE.STATS_DEATH) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].deceased))
-      );
-      c = STATS.COLOR.DEATH;
-      k = stats.latest[key].deceased;
-    } else if (mode === MODE.STATS_RECOVERED) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].recovered))
-      );
-      c = STATS.COLOR.RECOVERED;
-      k = stats.latest[key].recovered;
-    } else if (mode === MODE.STATS_TOTAL_OBS) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].total_obs))
-      );
-      c = STATS.COLOR.TOTAL_OBS;
-      k = stats.latest[key].total_obs;
-    } else if (mode === MODE.STATS_HOSOBS) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].hospital_obs))
-      );
-      c = STATS.COLOR.HOS_OBS;
-      k = stats.latest[key].hospital_obs;
-    } else if (mode === MODE.STATS_HOME_OBS) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].home_obs))
-      );
-      c = STATS.COLOR.HOME_OBS;
-      k = stats.latest[key].home_obs;
-    } else if (mode === MODE.STATS_HOSTODAY) {
-      Object.keys(stats.latest).forEach(
-        (d) => (a = Math.max(a, stats.latest[d].hospital_today))
-      );
-      c = STATS.COLOR.HOS_TODAY;
-      k = stats.latest[key].hospital_today;
-    }
-    return ["interpolate", ["linear"], k, 0, dark ? "white" : "black", a, c];
-  };
-
-  const statsHeight = (key: string) => {
-    let k = 0;
-    if (mode === MODE.STATS_ACTIVE) {
-      k = stats.latest[key].active / statsMax.active;
-    } else if (mode === MODE.STATS_CONFIRMED) {
-      k = stats.latest[key].confirmed / statsMax.confirmed;
-    } else if (mode === MODE.STATS_DEATH) {
-      k = stats.latest[key].deceased / statsMax.deceased;
-    } else if (mode === MODE.STATS_RECOVERED) {
-      k = stats.latest[key].recovered / statsMax.recovered;
-    } else if (mode === MODE.STATS_TOTAL_OBS) {
-      k = stats.latest[key].total_obs / statsMax.total_obs;
-    } else if (mode === MODE.STATS_HOSOBS) {
-      k = stats.latest[key].hospital_obs / statsMax.hospital_obs;
-    } else if (mode === MODE.STATS_HOME_OBS) {
-      k = stats.latest[key].home_obs / statsMax.home_obs;
-    } else if (mode === MODE.STATS_HOSTODAY) {
-      k = stats.latest[key].hospital_today / statsMax.hospital_today;
-    }
-    return k * STATS.HEIGHT_MULTIPLIER;
-  };
-
   return (
     <div className="flex flex-col min-w-full min-h-full lg:flex-row">
-      <Card zones={zones} stats={stats} />
+      <Card
+        zones={zones}
+        stats={stats}
+        draw={draw}
+        descriptions={descriptions}
+        features={features}
+        featuresEnabled={featuresEnabled}
+        setFeaturesEnabled={setFeaturesEnabled}
+      />
       <div
         className="flex flex-grow w-full lg:w-5/6"
         style={{ minHeight: "90vh" }}
@@ -335,13 +358,12 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
           onViewportChange={setViewport}
           maxBounds={MAP.MAXBOUNDS}
           maxZoom={MAP.MAX_ZOOM}
-          onClick={onClick}
           viewportChangeMethod="flyTo"
           viewportChangeOptions={{ duration: 1000 }}
           {...viewport}
           ref={mapRef}
         >
-          <Source id="district" type="geojson" data={geoJSONs.district} />
+          <Source id="district" type="geojson" data={district} />
           <Source id="lsgd" type="geojson" data={lsgd} />
           <Image
             id="all-ward"
@@ -384,9 +406,6 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
                   ],
                   "fill-opacity": 0.2,
                 }}
-                onHover={onHover}
-                onLeave={onLeave}
-                onClick={onClick}
               />
               <Layer
                 before="lsgd-label"
@@ -427,30 +446,37 @@ export default function MapBox({ stats, zones, geoJSONs, descriptions }) {
           )}
           {mode <= MODE.STATS_CONFIRMED && (
             <div>
-              {Object.keys(stats.latest).map((key, i) => {
-                return (
-                  <div key={i}>
-                    <Layer
-                      id={`zone-district-${key}`}
-                      type="fill-extrusion"
-                      source="district"
-                      paint={{
-                        "fill-extrusion-color": statsInterpolate(key),
-                        "fill-extrusion-opacity": 0.8,
-                        "fill-extrusion-height": statsHeight(key),
-                        "fill-extrusion-vertical-gradient": true,
-                      }}
-                      onHover={onHover}
-                      onLeave={onLeave}
-                      onClick={onClick}
-                    />
-                    <Filter
-                      layerId={`zone-district-${key}`}
-                      filter={["==", "DISTRICT", key]}
-                    />
-                  </div>
-                );
-              })}
+              <Layer
+                id="district-stats"
+                type="fill-extrusion"
+                source="district"
+                paint={{
+                  "fill-extrusion-color": [
+                    "interpolate",
+                    ["linear"],
+                    [
+                      "/",
+                      ["get", STATS_MODE_MAP.find((j) => j[0] === mode)[1]],
+                      statsMax[STATS_MODE_MAP.find((j) => j[0] === mode)[1]],
+                    ],
+                    0,
+                    "white",
+                    1,
+                    STATS_COLOR_MODE_MAP.find((j) => j[0] === mode)[1],
+                  ],
+                  "fill-extrusion-opacity": 0.8,
+                  "fill-extrusion-height": [
+                    "*",
+                    [
+                      "/",
+                      ["get", STATS_MODE_MAP.find((j) => j[0] === mode)[1]],
+                      statsMax[STATS_MODE_MAP.find((j) => j[0] === mode)[1]],
+                    ],
+                    STATS.HEIGHT_MULTIPLIER,
+                  ],
+                  "fill-extrusion-vertical-gradient": true,
+                }}
+              />
               {GenLL("district")}
             </div>
           )}

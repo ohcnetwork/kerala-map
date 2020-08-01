@@ -47,8 +47,4 @@ h3 {
 
 @import url("https://fonts.googleapis.com/css?family=Inter:100,200,300,400,500,600,700,800,900&display=swap");
 
-/*! purgecss start ignore */
-@import url("https://api.mapbox.com/mapbox-gl-js/v1.10.0/mapbox-gl.css");
-/*! purgecss end ignore */
-
 @tailwind utilities;

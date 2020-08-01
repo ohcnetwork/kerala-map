@@ -30,6 +30,18 @@ export async function getDescriptions() {
   }
 }
 
+export async function getFeatures() {
+  try {
+    let { data } = await axios.get(API_BASE_URL + "/api/feature");
+    return data.data.map((item) => ({
+      ...JSON.parse(item.data),
+      properties: { FEATURE_ID: item.ID, FEATURE_DESC: item.description },
+    }));
+  } catch (error) {
+    throw error;
+  }
+}
+
 export async function login(data) {
   try {
     let res = await axios.post(API_BASE_URL + "/api/auth/login", data);
@@ -71,6 +83,45 @@ export async function updateDescription(id, data, token) {
 export async function deleteDescription(id, token) {
   try {
     let res = await axios.delete(API_BASE_URL + "/api/description/" + id, {
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function createFeature(data, token) {
+  try {
+    let res = await axios.post(API_BASE_URL + "/api/feature", data, {
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function updateFeature(id, data, token) {
+  try {
+    let res = await axios.patch(API_BASE_URL + "/api/feature/" + id, data, {
+      headers: {
+        Authorization: "Bearer " + token,
+      },
+    });
+    return res.data;
+  } catch (error) {
+    throw error;
+  }
+}
+
+export async function deleteFeature(id, token) {
+  try {
+    let res = await axios.delete(API_BASE_URL + "/api/feature/" + id, {
       headers: {
         Authorization: "Bearer " + token,
       },
