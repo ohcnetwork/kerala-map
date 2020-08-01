@@ -327,7 +327,9 @@ export default function Card({
                         ALERTS and REGIONS are added by District Collector.
                       </div>
                       <div className="text-mobilexs lg:text-mobile">
-                        Hover/select an area for detailed information.
+                        {draw && draw.getMode() === "draw_polygon"
+                          ? "Press ENTER to save the polygon."
+                          : "Hover/select an area for detailed information."}
                       </div>
                     </div>
                   ) : (
