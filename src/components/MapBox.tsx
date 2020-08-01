@@ -1,9 +1,22 @@
 import MapboxDraw from "@mapbox/mapbox-gl-draw";
 import "@mapbox/mapbox-gl-draw/dist/mapbox-gl-draw.css";
-import MapGL, { GeolocateControl, Image, Layer, Source } from "@urbica/react-map-gl";
+import MapGL, {
+  GeolocateControl,
+  Image,
+  Layer,
+  Source,
+} from "@urbica/react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
-import { MAP, MODAL_ACTION, MODE, STATS, STATS_COLOR_MODE_MAP, STATS_MODE_MAP, ZONE } from "../constants";
+import {
+  MAP,
+  MODAL_ACTION,
+  MODE,
+  STATS,
+  STATS_COLOR_MODE_MAP,
+  STATS_MODE_MAP,
+  ZONE,
+} from "../constants";
 import { AuthContext } from "../context/AuthContext";
 import { GeoContext } from "../context/GeoContext";
 import { HoveredContext } from "../context/HoveredContext";
@@ -226,6 +239,7 @@ export default function MapBox({
             "lsgd-hot-desc",
             "gl-draw-polygon-fill-active.cold",
             "gl-draw-polygon-fill-inactive.cold",
+            "gl-draw-polygon-fill-inactive.hot",
           ].includes(feat.layer.id)
         )
         .map((feat) => {
@@ -247,6 +261,7 @@ export default function MapBox({
             [
               "gl-draw-polygon-fill-active.cold",
               "gl-draw-polygon-fill-inactive.cold",
+              "gl-draw-polygon-fill-inactive.hot",
             ].includes(feat.layer.id)
           )
           .map((feat) =>

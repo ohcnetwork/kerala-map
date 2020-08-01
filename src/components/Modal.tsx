@@ -16,7 +16,7 @@ import {
 
 function Modal() {
   const { dark } = useContext(ThemeContext);
-  const { auth, login } = useContext(AuthContext);
+  const { auth, login, logout } = useContext(AuthContext);
   const { modal, setModal } = useContext(ModalContext);
 
   const loginForm = () => {
@@ -137,7 +137,10 @@ function Modal() {
                 }
               }
               job
-                .catch((e) => console.error(e))
+                .catch((e) => {
+                  logout();
+                  console.error(e);
+                })
                 .finally(() =>
                   setModal({
                     ...modal,
@@ -208,7 +211,10 @@ function Modal() {
                       auth.token
                     );
               job
-                .catch((e) => console.error(e))
+                .catch((e) => {
+                  logout();
+                  console.error(e);
+                })
                 .finally(() =>
                   setModal({
                     ...modal,
@@ -249,7 +255,10 @@ function Modal() {
             onClick={() => {
               let d = modal.payload;
               deleteFeature(d.id, auth.token)
-                .catch((e) => console.error(e))
+                .catch((e) => {
+                  logout();
+                  console.error(e);
+                })
                 .finally(() =>
                   setModal({
                     ...modal,
