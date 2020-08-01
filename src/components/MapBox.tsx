@@ -103,7 +103,7 @@ export default function MapBox({
   const { mode } = useContext(ModeContext);
   const { setModal } = useContext(ModalContext);
   const [draw, setDraw] = useState(null);
-  const [featuresEnabled, setFeaturesEnabled] = useState(false);
+  const [featuresEnabled, setFeaturesEnabled] = useState(true);
   const [viewport, setViewport] = useState({
     latitude: (MAP.MAXBOUNDS[0][1] + MAP.MAXBOUNDS[1][1]) / 2,
     longitude: (MAP.MAXBOUNDS[0][0] + MAP.MAXBOUNDS[1][0]) / 2,
