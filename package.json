@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@mapbox/mapbox-gl-draw": "^1.2.0",
+    "@mapbox/mapbox-gl-draw": "git+https://github.com/saanuregh/mapbox-gl-draw.git",
     "@urbica/react-map-gl": "^1.13.2",
     "axios": "^0.19.2",
     "geobuf": "^3.0.2",
