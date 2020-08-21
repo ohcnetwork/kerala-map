@@ -1,5 +1,6 @@
 module.exports = {
   entry: "src/index",
+  reactRefresh: true,
   plugins: [
     {
       resolve: "@poi/plugin-typescript",

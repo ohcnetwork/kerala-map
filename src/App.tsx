@@ -1,6 +1,5 @@
 import React, { useContext, useEffect, useState } from "react";
 import { Activity, ChevronDown, Moon, Sun, User } from "react-feather";
-import { hot } from "react-hot-loader";
 import MapBox from "./components/MapBox";
 import Modal from "./components/Modal";
 import { MODAL_ACTION } from "./constants";
@@ -179,4 +178,4 @@ function App() {
   );
 }
 
-export default hot(module)(App);
+export default App;
